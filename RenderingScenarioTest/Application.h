@@ -1,12 +1,7 @@
 #pragma once
 
-#include "SDL/SDL.h"
-
-#include "SDL/SDL_opengl.h"
-#include "glm/glm.hpp"
-
-class SDLWindow;
-class Shader;
+#include "SDLWindow.h"
+#include "Shader.h"
 
 
 class Application
@@ -22,7 +17,6 @@ public:
 	virtual ~Application();
 
 public:
-	virtual void Initialize() = 0;
 	void Run();
 
 protected:
@@ -38,11 +32,4 @@ protected:
 	SDLWindow* _window;
 	Shader* _shader;
 	bool* _keys;
-
-	GLfloat* m_rectangleVertices;
-	GLuint m_rectangleVAO;
-
-protected:	// Common logic for test applications.
-	bool InitResourcesForRectangle();
-	void RenderRectangle(GLuint target);
 };

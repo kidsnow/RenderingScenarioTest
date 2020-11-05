@@ -5,7 +5,8 @@
 
 
 Texture::Texture(std::string filePath) :
-	_id(0)
+	_id(0),
+	_data(nullptr)
 {
 	int width, height;
 
@@ -33,6 +34,13 @@ Texture::Texture(std::string filePath) :
 
 Texture::~Texture()
 {
+	glDeleteTextures(1, &_id);
+}
+
+void Texture::Render()
+{
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, _id);
 }
 
 unsigned char* Texture::loadImage(const char* fileName, int& width, int& height)

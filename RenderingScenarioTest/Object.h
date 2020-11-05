@@ -9,6 +9,9 @@ public:
 	Object();
 	virtual ~Object();
 
+public:
+	void Render();
+
 private:
-	GLuint _VAO;
+	GLuint _vao;
 };

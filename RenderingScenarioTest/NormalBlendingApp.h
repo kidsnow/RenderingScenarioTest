@@ -2,6 +2,9 @@
 
 #include "Application.h"
 
+class Object;
+class Texture;
+
 
 class NormalBlendingApp : public Application
 {
@@ -10,6 +13,9 @@ public:
 	virtual ~NormalBlendingApp();
 
 public:
-	virtual void Initialize();
-	virtual void Run();
+	virtual void Update();
+
+private:
+	Object* _rectangle;
+	Texture* _texture;
 };
