@@ -21,15 +21,19 @@ SDLWindow::~SDLWindow()
 
 void SDLWindow::initSDLWindow()
 {
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	{
+		SDL_Log("Couldn't initialize video driver: %s\n", SDL_GetError());
+		exit(0);
+	}
+
 	uint32_t windowFlags;
 
 	windowFlags = 0;
 	windowFlags |= SDL_WINDOW_RESIZABLE;
 	windowFlags |= SDL_WINDOW_OPENGL;
 
-	_handle = SDL_CreateWindow(_name.c_str(),
-		_posX, _posY,
-		_width, _height, windowFlags);
+	_handle = SDL_CreateWindow(_name.c_str(), _posX, _posY, _width, _height, windowFlags);
 	if (_handle == NULL)
 	{
 		SDL_Log("Couldn't create window: %s\n", SDL_GetError());

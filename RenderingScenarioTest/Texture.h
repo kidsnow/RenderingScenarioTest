@@ -19,5 +19,4 @@ private:
 
 private:
 	GLuint _id;
-	unsigned char* _data;
 };
