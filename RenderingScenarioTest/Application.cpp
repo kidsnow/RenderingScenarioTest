@@ -40,10 +40,23 @@ void Application::Run()
 				}
 				break;
 			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym)
+				SDL_Keycode code = event.key.keysym.sym;
+
+				if (code == SDLK_ESCAPE)
 				{
-				case SDLK_ESCAPE:
 					m_windowShouldClose = true;
+					break;
+				}
+				if (code >= 'a' && code <= 'z')
+				{
+					int sdlkeyToKey = 'a' - KEY_A;
+					_keys[code - sdlkeyToKey] = true;
+					break;
+				}
+				if (code >= '0' && code <= '9')
+				{
+					int sdlkeyToKey = '0' - KEY_0;
+					_keys[code - sdlkeyToKey] = true;
 					break;
 				}
 

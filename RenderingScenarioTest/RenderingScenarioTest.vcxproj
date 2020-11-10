@@ -29,15 +29,17 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NormalBlendingApp.cpp" />
-    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Renderable.cpp" />
     <ClCompile Include="SDLWindow.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="NormalBlendingApp.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="Renderable.h" />
     <ClInclude Include="SDLWindow.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />

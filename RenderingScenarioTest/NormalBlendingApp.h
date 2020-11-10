@@ -2,7 +2,8 @@
 
 #include "Application.h"
 
-class Object;
+class Camera;
+class Renderable;
 class Texture;
 
 
@@ -16,6 +17,13 @@ public:
 	virtual void Update();
 
 private:
-	Object* _rectangle;
-	Texture* _texture;
+	void processKeyInput();
+
+private:
+	Camera* _camera;
+	Renderable* _baseRectangle;
+	Renderable* _detailRectangle;
+	Texture* _baseTexture;
+	Texture* _detailTexture;
+	bool _printItOut;
 };
