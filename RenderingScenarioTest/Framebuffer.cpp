@@ -21,12 +21,14 @@ void Framebuffer::SetRenderTarget(Texture* texture)
 	_height = texture->GetHeight();
 	glBindFramebuffer(GL_FRAMEBUFFER, _id);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->GetID(), 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Framebuffer::Bind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, _id);
+	glViewport(0, 0, _width, _height);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
 		exit(0);

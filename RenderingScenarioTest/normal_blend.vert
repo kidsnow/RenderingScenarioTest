@@ -9,6 +9,5 @@ uniform mat4 MVP;
 
 void main(void) {
     gl_Position = MVP * a_position;
-	//gl_Position = a_position;
 	UV = a_texcoord;
 }

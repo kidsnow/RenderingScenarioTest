@@ -18,6 +18,8 @@ Renderable::Renderable(glm::vec2 size) :
 Renderable::~Renderable()
 {
 	glDeleteVertexArrays(1, &_vao);
+	if (_blendedTexture != nullptr)
+		delete _blendedTexture;
 }
 
 void Renderable::initializeVAO()
@@ -68,7 +70,7 @@ void Renderable::blendNormalMap()
 	Shader* shader = ShaderManager::Instance()->GetShader("simple");
 	shader->Use();
 
-	glm::mat4 identity;
+	glm::mat4 identity(1.0f);
 	shader->SetMatrix4("MVP", identity);
 
 	Renderable* forBaseTexture = new Renderable(glm::vec2(2.0, 2.0));
@@ -76,9 +78,9 @@ void Renderable::blendNormalMap()
 	forBaseTexture->Render();
 	
 	framebuffer->DumpFBO2PPM("test.ppm");
-
 	framebuffer->Unbind();
-	exit(0);
+
+	delete forBaseTexture;
 }
 
 void Renderable::Render()
@@ -91,7 +93,6 @@ void Renderable::Render()
 		}
 		else
 		{
-			blendNormalMap();
 			_blendedTexture->Render();
 		}
 	}
@@ -108,4 +109,5 @@ void Renderable::BindTexture(Texture* texture)
 void Renderable::AddDetail(Renderable* detail)
 {
 	_detailList.push_back(detail);
+	blendNormalMap();
 }

@@ -7,5 +7,4 @@ uniform sampler2D u_texture;
 
 void main(void) {
     final_color = texture(u_texture, vec2(UV.x, -UV.y));
-	final_color = vec4(1.0, 1.0, 0.0, 1.0);
 }
