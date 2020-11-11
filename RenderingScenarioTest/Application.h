@@ -71,7 +71,6 @@ private:
 
 protected:
 	SDLWindow* _window;
-	Shader* _shader;
 
 private:
 	bool* _keys;

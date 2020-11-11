@@ -1,5 +1,6 @@
 #include "NormalBlendingApp.h"
 
+#include "ShaderManager.h"
 #include "Camera.h"
 #include "Renderable.h"
 #include "Texture.h"
@@ -13,7 +14,6 @@ NormalBlendingApp::NormalBlendingApp() :
 	_detailTexture(nullptr),
 	_printItOut(false)
 {
-	_shader->CompileRenderingShader("simple.vert", "simple.frag");
 	_camera = new Camera();
 	glm::quat rot = _camera->GetQuaternion();
 	_camera->SetPosition(glm::vec4(0.0, 0.0, 500.0, 1.0));
@@ -79,10 +79,13 @@ void NormalBlendingApp::Update()
 	glClearColor(0.4f, 0.4f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	Shader* shader = ShaderManager::Instance()->GetShader("simple");
+	shader->Use();
+
 	glm::mat4 view = _camera->GetInvTransform();
 	glm::mat4 proj = _camera->GetProjectionTransform();
 
-	_shader->Use();
-	_shader->SetMatrix4("MVP", proj*view*_baseRectangle->GetTransform());
+	shader->SetMatrix4("MVP", proj*view*_baseRectangle->GetTransform());
+
 	_baseRectangle->Render();
 }

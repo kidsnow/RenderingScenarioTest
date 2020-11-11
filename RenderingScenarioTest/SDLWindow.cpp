@@ -79,7 +79,7 @@ void SDLWindow::initGLContext()
 		exit(0);
 	}
 
-	std::cout << glGetString(GL_VERSION);
+	std::cout << glGetString(GL_VERSION) << std::endl;
 }
 
 void SDLWindow::updateCurrentWindowSize()

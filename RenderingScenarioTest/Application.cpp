@@ -5,18 +5,15 @@
 
 Application::Application() :
 	m_windowShouldClose(false),
-	_window(nullptr),
-	_shader(nullptr)
+	_window(nullptr)
 {
 	_window = new SDLWindow("Main Window", 100, 100, 960, 540);
-	_shader = new Shader();
 	_keys = new bool[(int)KEY_LIST::KEY_LIST_SIZE];
 }
 
 Application::~Application()
 {
 	delete _keys;
-	delete _shader;
 	delete _window;
 }
 
