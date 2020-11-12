@@ -21,6 +21,8 @@ public:
 	void MakeCurrent();
 	void SwapWindow();
 	void DumpFBO2PPM(const char* fileName);
+	int GetWidth() { return _width; }
+	int GetHeight() { return _height; }
 
 private:
 	SDL_Window* _handle;

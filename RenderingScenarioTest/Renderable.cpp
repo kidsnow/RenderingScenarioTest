@@ -3,14 +3,35 @@
 #include "Framebuffer.h"
 #include "ShaderManager.h"
 
+TextureForBlending::TextureForBlending(int width, int height) :
+	_width(width),
+	_height(height),
+	_target(0),
+	_source(1)
+{
+	_texture[_target] = new Texture(width, height);
+	_texture[_source] = new Texture(width, height);
+}
+
+TextureForBlending::~TextureForBlending()
+{
+	delete _texture[0];
+	delete _texture[1];
+}
+
+void TextureForBlending::SwapTextures()
+{
+	_target = (_target + 1) % 2;
+	_source = (_source + 1) % 2;
+}
 
 Renderable::Renderable(glm::vec2 size) :
 	_size(size),
 	_vao(0),
 	_vertices(nullptr),
 	_texture(nullptr),
-	_blendedTexture(nullptr),
-	_normalBlendMode(UDN)
+	_textureForBlending(nullptr),
+	_normalBlendMode(DIFFERENTIAL)
 {
 	initializeVAO();
 }
@@ -18,8 +39,8 @@ Renderable::Renderable(glm::vec2 size) :
 Renderable::~Renderable()
 {
 	glDeleteVertexArrays(1, &_vao);
-	if (_blendedTexture != nullptr)
-		delete _blendedTexture;
+	if (_textureForBlending != nullptr)
+		delete _textureForBlending;
 }
 
 void Renderable::initializeVAO()
@@ -54,17 +75,17 @@ void Renderable::initializeVAO()
 	glBindVertexArray(0);
 }
 
-void Renderable::blendNormalMap()
+void Renderable::BlendNormalMap(bool dumpFlag)
 {
-	if (_blendedTexture == nullptr)
+	if (_textureForBlending == nullptr)
 	{
-		_blendedTexture = new Texture(_texture->GetWidth(), _texture->GetHeight());
+		_textureForBlending = new TextureForBlending(_texture->GetWidth(), _texture->GetHeight());
 	}
 
-	// FBO 객체 생성하고 base texture copy한 다음에
-	// FBO binding해둔 상태로 detail renderable들 렌더링 진행.
+	// 먼저 base texture copy 진행.
+	// Target에 base texture copy.
 	Framebuffer* framebuffer = new Framebuffer();
-	framebuffer->SetRenderTarget(_blendedTexture);
+	framebuffer->SetRenderTarget(_textureForBlending->GetTargetTexture());
 	framebuffer->Bind();
 
 	Shader* shader = ShaderManager::Instance()->GetShader("simple");
@@ -76,11 +97,57 @@ void Renderable::blendNormalMap()
 	Renderable* forBaseTexture = new Renderable(glm::vec2(2.0, 2.0));
 	forBaseTexture->BindTexture(_texture);
 	forBaseTexture->Render();
-	
-	framebuffer->DumpFBO2PPM("test.ppm");
-	framebuffer->Unbind();
 
-	delete forBaseTexture;
+
+	shader = ShaderManager::Instance()->GetShader("normal_blend");
+	shader->Use();
+	shader->SetInteger("blendMode", 1);
+
+	_textureForBlending->SwapTextures();
+	_textureForBlending->GetSourceTexture();
+
+	shader->SetInteger("baseTexture", 0);
+	shader->SetMatrix4("MVP", identity);
+	shader->SetInteger("detailTexture", 1);
+	_textureForBlending->GetSourceTexture()->SetUnitIndex(0);
+	_detailList[0]->GetTexture()->SetUnitIndex(1);
+	_textureForBlending->GetSourceTexture()->Render();
+	_detailList[0]->GetTexture()->Render();
+
+	framebuffer->SetRenderTarget(_textureForBlending->GetTargetTexture());
+	framebuffer->Bind();
+
+	forBaseTexture->BindTexture(nullptr);
+	forBaseTexture->Render();
+
+	//for (auto detail : _detailList)
+	//{
+	//	_textureForBlending->SwapTextures();
+	//	shader->SetMatrix4("MVP", identity);
+	//	shader->SetInteger("baseTexture", 0);
+	//	_textureForBlending->GetSourceTexture()->SetUnitIndex(0);
+	//	shader->SetInteger("detailTexture", 1);
+	//	detail->GetTexture()->SetUnitIndex(1);
+	//
+	//	framebuffer->SetRenderTarget(_textureForBlending->GetTargetTexture());
+	//	framebuffer->Bind();
+	//
+	//	_textureForBlending->GetSourceTexture()->Render();
+	//	detail->GetTexture()->Render();
+	//
+	//	forBaseTexture->BindTexture(detail->GetTexture());
+	//	forBaseTexture->Render();
+	//	//glBindVertexArray(_vao);
+	//	//glDrawArrays(GL_TRIANGLES, 0, 6);
+	//	//glFinish();
+	//}
+
+	if (dumpFlag)
+	{
+		std::string fileName = "texture" + std::to_string(_textureForBlending->GetTargetTexture()->GetID()) + ".ppm";
+		framebuffer->DumpFBO2PPM(fileName.c_str());
+	}
+	framebuffer->Unbind();
 }
 
 void Renderable::Render()
@@ -93,7 +160,7 @@ void Renderable::Render()
 		}
 		else
 		{
-			_blendedTexture->Render();
+			_textureForBlending->GetTargetTexture()->Render();
 		}
 	}
 	glBindVertexArray(_vao);
@@ -109,5 +176,5 @@ void Renderable::BindTexture(Texture* texture)
 void Renderable::AddDetail(Renderable* detail)
 {
 	_detailList.push_back(detail);
-	blendNormalMap();
+	BlendNormalMap();
 }

@@ -6,6 +6,7 @@
 
 Texture::Texture(int width, int height) :
 	_id(0),
+	_unitIndex(0),
 	_width(width),
 	_height(height)
 {
@@ -55,7 +56,7 @@ Texture::~Texture()
 
 void Texture::Render()
 {
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0 + _unitIndex);
 	glBindTexture(GL_TEXTURE_2D, _id);
 }
 

@@ -74,8 +74,15 @@ void NormalBlendingApp::Update()
 {
 	processKeyInput();
 
+	if (_printItOut)
+	{
+		_baseRectangle->BlendNormalMap(true);
+		_printItOut = false;
+	}
+
 	glEnable(GL_DEPTH_TEST);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, _window->GetWidth(), _window->GetHeight());
 	glClearColor(0.4f, 0.4f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
