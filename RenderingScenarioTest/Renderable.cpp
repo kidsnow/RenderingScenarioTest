@@ -101,46 +101,31 @@ void Renderable::BlendNormalMap(bool dumpFlag)
 
 	shader = ShaderManager::Instance()->GetShader("normal_blend");
 	shader->Use();
-	shader->SetInteger("blendMode", 1);
+	//shader->SetInteger("blendMode", _normalBlendMode);
+	shader->SetInteger("blendMode", _normalBlendMode);
 
-	_textureForBlending->SwapTextures();
-	_textureForBlending->GetSourceTexture();
+	for (auto detail : _detailList)
+	{
+		_textureForBlending->SwapTextures();
+		Texture* baseTexture = _textureForBlending->GetSourceTexture();
+		Texture* detailTexture = detail->GetTexture();
 
-	shader->SetInteger("baseTexture", 0);
-	shader->SetMatrix4("MVP", identity);
-	shader->SetInteger("detailTexture", 1);
-	_textureForBlending->GetSourceTexture()->SetUnitIndex(0);
-	_detailList[0]->GetTexture()->SetUnitIndex(1);
-	_textureForBlending->GetSourceTexture()->Render();
-	_detailList[0]->GetTexture()->Render();
+		shader->SetMatrix4("MVP", identity);
 
-	framebuffer->SetRenderTarget(_textureForBlending->GetTargetTexture());
-	framebuffer->Bind();
+		shader->SetInteger("baseTexture", 0);
+		baseTexture->SetUnitIndex(0);
+		baseTexture->Render();
 
-	forBaseTexture->BindTexture(nullptr);
-	forBaseTexture->Render();
+		shader->SetInteger("detailTexture", 1);
+		detailTexture->SetUnitIndex(1);
+		detailTexture->Render();
 
-	//for (auto detail : _detailList)
-	//{
-	//	_textureForBlending->SwapTextures();
-	//	shader->SetMatrix4("MVP", identity);
-	//	shader->SetInteger("baseTexture", 0);
-	//	_textureForBlending->GetSourceTexture()->SetUnitIndex(0);
-	//	shader->SetInteger("detailTexture", 1);
-	//	detail->GetTexture()->SetUnitIndex(1);
-	//
-	//	framebuffer->SetRenderTarget(_textureForBlending->GetTargetTexture());
-	//	framebuffer->Bind();
-	//
-	//	_textureForBlending->GetSourceTexture()->Render();
-	//	detail->GetTexture()->Render();
-	//
-	//	forBaseTexture->BindTexture(detail->GetTexture());
-	//	forBaseTexture->Render();
-	//	//glBindVertexArray(_vao);
-	//	//glDrawArrays(GL_TRIANGLES, 0, 6);
-	//	//glFinish();
-	//}
+		framebuffer->SetRenderTarget(_textureForBlending->GetTargetTexture());
+		framebuffer->Bind();
+
+		forBaseTexture->BindTexture(nullptr);
+		forBaseTexture->Render();
+	}
 
 	if (dumpFlag)
 	{

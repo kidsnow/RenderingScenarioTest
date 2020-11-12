@@ -12,13 +12,21 @@ uniform sampler2D detailTexture;
 
 void main(void)
 {
+	vec3 result;
+	vec3 base = texture2D(baseTexture, vec2(UV.x, -UV.y)).xyz;
+	vec3 detail = texture2D(detailTexture, vec2(UV.x, -UV.y)).xyz;
+	base.xy = base.xy * 2.0 - 1.0;
+	detail.xy = detail.xy * 2.0 - 1.0;
+
 	if (blendMode == 0)
 	{
-		final_color = texture(baseTexture, vec2(UV.x, -UV.y));
+		result = normalize(vec3(base.xy * detail.z + detail.xy * base.z, base.z * detail.z));
 	}
     else if (blendMode == 1)
 	{
-		final_color = texture(detailTexture, vec2(UV.x, -UV.y));
+		result = normalize(vec3(base.xy + detail.xy, base.z));
 	}
-	//final_color = vec4(1.0, 1.0, 0.0, 1.0);
+
+	result.xy = (result.xy + 1.0) * 0.5;
+	final_color = vec4(result, 1.0);
 }

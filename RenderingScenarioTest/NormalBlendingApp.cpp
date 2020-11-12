@@ -68,6 +68,11 @@ void NormalBlendingApp::processKeyInput()
 	{
 		_printItOut = true;
 	}
+	if (IsPressed(KEY_M))
+	{
+		_baseRectangle->ToggleNormalBlendMode();
+		_baseRectangle->BlendNormalMap();
+	}
 }
 
 void NormalBlendingApp::Update()
