@@ -77,9 +77,8 @@ void Renderable::initializeVAO()
 	glBindVertexArray(0);
 }
 
-void Renderable::ToggleNormalBlendMode()
+void Renderable::LogCurrentMode()
 {
-	_normalBlendMode = (NBM)((_normalBlendMode + 1) % MODE_NUM);
 	std::cout << "Current blend mode: ";
 	switch (_normalBlendMode)
 	{
@@ -106,6 +105,20 @@ void Renderable::ToggleNormalBlendMode()
 		break;
 	}
 	std::cout << std::endl;
+}
+
+void Renderable::SetNormalBlendMode(NBM mode)
+{
+	_normalBlendMode = mode;
+	LogCurrentMode();
+	BlendNormalMap();
+}
+
+void Renderable::ToggleNormalBlendMode()
+{
+	_normalBlendMode = (NBM)((_normalBlendMode + 1) % MODE_NUM);
+	LogCurrentMode();
+	BlendNormalMap();
 }
 
 void Renderable::BlendNormalMap(bool dumpFlag)

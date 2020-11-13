@@ -10,13 +10,21 @@ uniform int blendMode;
 uniform sampler2D baseTexture;
 uniform sampler2D detailTexture;
 
+float overlay(float x, float y)
+{
+	if (x < 0.5)
+		return 2.0*x*y;
+	else
+		return 1.0 - 2.0*(1.0 - x)*(1.0 - y);
+}
+
 void main(void)
 {
 	vec3 result;
 	vec3 base = texture2D(baseTexture, vec2(UV.x, -UV.y)).xyz;
 	vec3 detail = texture2D(detailTexture, vec2(UV.x, -UV.y)).xyz;
-	base.xy = base.xy*2 - 1;
-	detail.xy = detail.xy*2 - 1;
+	base = base*2.0 - 1.0;
+	detail = detail*2.0 - 1.0;
 
 	if (blendMode == 0) // LINEAR
 	{
@@ -26,31 +34,10 @@ void main(void)
 	{
 		base = texture2D(baseTexture, vec2(UV.x, -UV.y)).xyz;
 		detail = texture2D(detailTexture, vec2(UV.x, -UV.y)).xyz;
-		if (base.x < 0.5)
-		{
-			result.x = 2*base.x*detail.x;
-		}
-		else
-		{
-			result.x = 1 - 2*(1 - base.x)*(1 - detail.x);
-		}
-		if (base.y < 0.5)
-		{
-			result.y = 2*base.y*detail.y;
-		}
-		else
-		{
-			result.y = 1 - 2*(1 - base.y)*(1 - detail.y);
-		}
-		if (base.z < 0.5)
-		{
-			result.z = 2*base.z*detail.z;
-		}
-		else
-		{
-			result.z = 1 - 2*(1 - base.z)*(1 - detail.z);
-		}
-		result.xy = result.xy*2 - 1;
+		result.x = overlay(base.x, detail.x);
+		result.y = overlay(base.y, detail.y);
+		result.z = overlay(base.z, detail.z);
+		result = result*2.0 - 1.0;
 	}
 	else if (blendMode == 2) // PARTIAL_DERIVATIVE
 	{
@@ -66,15 +53,15 @@ void main(void)
 	}
 	else if (blendMode == 5) // REORIENTED
 	{
-		float a = 1/(1 + base.z);
+		float a = 1.0/(1.0 + base.z);
 		float b = -base.x*base.y*a;
-		vec3 basis0 = vec3(1 - base.x*base.x*a, b, -base.x);
-		vec3 basis1 = vec3(b, 1 - base.y*base.y*a, -base.y);
+		vec3 basis0 = vec3(1.0 - base.x*base.x*a, b, -base.x);
+		vec3 basis1 = vec3(b, 1.0 - base.y*base.y*a, -base.y);
 		
 		if (base.z < -0.9999999)
 		{
-			basis0 = vec3(0, -1, 0);
-			basis1 = vec3(-1, 0, 0);
+			basis0 = vec3(0.0, -1.0, 0.0);
+			basis1 = vec3(-1.0, 0.0, 0.0);
 		}
 
 		result = detail.x*basis0 + detail.y*basis1 + detail.z*base;
@@ -86,6 +73,6 @@ void main(void)
 		result = detail.x*basis0 + detail.y*basis1 + detail.z*base;
 	}
 
-	result.xy = (result.xy + 1.0)*0.5;
+	result = (result + 1.0)*0.5;
 	final_color = vec4(result, 1.0);
 }

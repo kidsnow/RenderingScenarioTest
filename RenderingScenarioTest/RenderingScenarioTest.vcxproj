@@ -137,6 +137,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glew32.lib;OpenGL32.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\SDL2.dll $(OutDir)
+xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -177,6 +181,10 @@ xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</C
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glew32.lib;OpenGL32.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\SDL2.dll $(OutDir)
+xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -197,6 +205,10 @@ xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</C
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glew32.lib;OpenGL32.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\SDL2.dll $(OutDir)
+xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

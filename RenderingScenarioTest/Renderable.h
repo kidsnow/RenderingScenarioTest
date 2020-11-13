@@ -49,7 +49,8 @@ public:
 	void Render();
 	void BindTexture(Texture* texture);
 	void AddDetail(Renderable* detail);
-	void SetNormalBlendMode(NBM mode) { _normalBlendMode = mode; }
+	void LogCurrentMode();
+	void SetNormalBlendMode(NBM mode);
 	void ToggleNormalBlendMode();
 	void BlendNormalMap(bool dumpFlag = false);
 	Texture* GetTexture() { return _texture; }

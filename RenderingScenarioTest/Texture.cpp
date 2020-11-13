@@ -12,7 +12,7 @@ Texture::Texture(int width, int height) :
 {
 	glGenTextures(1, &_id);
 	glBindTexture(GL_TEXTURE_2D, _id);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -28,7 +28,7 @@ Texture::Texture(std::string filePath) :
 	_height(0)
 {
 	unsigned char *data = loadImage(filePath.c_str(), _width, _height);
-
+	
 	if (data)
 	{
 		glGenTextures(1, &_id);
@@ -40,7 +40,7 @@ Texture::Texture(std::string filePath) :
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glFinish();
-
+	
 		freeImage(data);
 	}
 	else
@@ -63,7 +63,7 @@ void Texture::Render()
 unsigned char* Texture::loadImage(const char* fileName, int& width, int& height)
 {
 	int temp;
-	return stbi_load(fileName, &width, &height, &temp, 0);
+	return stbi_load(fileName, &width, &height, &temp, STBI_rgb);
 }
 
 void Texture::freeImage(unsigned char* data)

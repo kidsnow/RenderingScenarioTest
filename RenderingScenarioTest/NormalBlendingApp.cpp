@@ -21,12 +21,12 @@ NormalBlendingApp::NormalBlendingApp() :
 
 	_baseRectangle = new Renderable(glm::vec2(320, 320));
 	_baseRectangle->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
-	_baseTexture = new Texture("Base.jpg");
+	_baseTexture = new Texture("resources/Top_N.png");
 	_baseRectangle->BindTexture(_baseTexture);
 
 	_detailRectangle = new Renderable(glm::vec2(320, 320));
 	_detailRectangle->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
-	_detailTexture = new Texture("DetailNormalMap.png");
+	_detailTexture = new Texture("resources/NormalDetail.png");
 	_detailRectangle->BindTexture(_detailTexture);
 
 	_baseRectangle->AddDetail(_detailRectangle);
@@ -71,7 +71,14 @@ void NormalBlendingApp::processKeyInput()
 	if (IsPressed(KEY_M))
 	{
 		_baseRectangle->ToggleNormalBlendMode();
-		_baseRectangle->BlendNormalMap();
+	}
+	for (int i = KEY_1; i < KEY_1 + MODE_NUM; i++)
+	{
+		if (IsPressed((KEY_LIST)i))
+		{
+			_baseRectangle->SetNormalBlendMode((NBM)(i - KEY_1));
+			return;
+		}
 	}
 }
 
