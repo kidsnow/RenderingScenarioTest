@@ -32,7 +32,13 @@ NormalBlendingApp::NormalBlendingApp() :
 	_detailTexture = new Texture("resources/NormalDetail.png");
 	_detailRectangle->BindTexture(_detailTexture);
 
+	_detailRectangle2 = new Renderable(glm::vec2(320, 320));
+	_detailRectangle2->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
+	_detailTexture2 = new Texture("resources/brick.png");
+	_detailRectangle2->BindTexture(_detailTexture2);
+
 	_baseRectangle->AddDetail(_detailRectangle);
+	_baseRectangle->AddDetail(_detailRectangle2);
 }
 
 NormalBlendingApp::~NormalBlendingApp()

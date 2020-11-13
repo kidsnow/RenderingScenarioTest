@@ -28,7 +28,9 @@ private:
 	float _far;
 	Renderable* _baseRectangle;
 	Renderable* _detailRectangle;
+	Renderable* _detailRectangle2;
 	Texture* _baseTexture;
 	Texture* _detailTexture;
+	Texture* _detailTexture2;
 	bool _printItOut;
 };
