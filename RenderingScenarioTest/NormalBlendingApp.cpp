@@ -8,6 +8,9 @@
 
 NormalBlendingApp::NormalBlendingApp() :
 	_camera(nullptr),
+	_frustumSize(960, 540),
+	_near(100.0),
+	_far(1000.0),
 	_baseRectangle(nullptr),
 	_detailRectangle(nullptr),
 	_baseTexture(nullptr),
@@ -15,9 +18,9 @@ NormalBlendingApp::NormalBlendingApp() :
 	_printItOut(false)
 {
 	_camera = new Camera();
-	glm::quat rot = _camera->GetQuaternion();
+	_camera->SetProjectionMode(CPM::Orthogonal);
 	_camera->SetPosition(glm::vec4(0.0, 0.0, 500.0, 1.0));
-	_camera->SetFrustum(glm::vec2(320, 180), 100, 1000);
+	_camera->SetFrustum(glm::vec2(960, 540), _near, _far);
 
 	_baseRectangle = new Renderable(glm::vec2(320, 320));
 	_baseRectangle->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
@@ -42,27 +45,27 @@ void NormalBlendingApp::processKeyInput()
 {
 	if (IsPressed(KEY_W))
 	{
-		_camera->Move(glm::vec3(0.0, 1.0, 0.0));
+		_camera->Move(glm::vec3(0.0, 10.0, 0.0));
 	}
 	if (IsPressed(KEY_A))
 	{
-		_camera->Move(glm::vec3(-1.0, 0.0, 0.0));
+		_camera->Move(glm::vec3(-10.0, 0.0, 0.0));
 	}
 	if (IsPressed(KEY_S))
 	{
-		_camera->Move(glm::vec3(0.0, -1.0, 0.0));
+		_camera->Move(glm::vec3(0.0, -10.0, 0.0));
 	}
 	if (IsPressed(KEY_D))
 	{
-		_camera->Move(glm::vec3(1.0, 0.0, 0.0));
+		_camera->Move(glm::vec3(10.0, 0.0, 0.0));
 	}
 	if (IsPressed(KEY_Q))
 	{
-		_camera->Move(glm::vec3(0.0, 0.0, -1.0));
+		_camera->Move(glm::vec3(0.0, 0.0, -10.0));
 	}
 	if (IsPressed(KEY_E))
 	{
-		_camera->Move(glm::vec3(0.0, 0.0, 1.0));
+		_camera->Move(glm::vec3(0.0, 0.0, 10.0));
 	}
 	if (IsPressed(KEY_P))
 	{
@@ -82,10 +85,19 @@ void NormalBlendingApp::processKeyInput()
 	}
 }
 
+void NormalBlendingApp::processMouseInput()
+{
+	if (IsPressed(MOUSE_LEFT))
+	{
+		_camera->Move(glm::vec3(-GetDeltaOfMouseX(), GetDeltaOfMouseY(), 0.0));
+	}
+	float mag = GetDeltaOfWheelY() * 0.1;
+	_frustumSize *= mag + 1.0;
+	_camera->SetFrustum(_frustumSize, _near, _far);
+}
+
 void NormalBlendingApp::Update()
 {
-	processKeyInput();
-
 	if (_printItOut)
 	{
 		_baseRectangle->BlendNormalMap(true);

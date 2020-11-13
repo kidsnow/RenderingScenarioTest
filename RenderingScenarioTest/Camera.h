@@ -20,11 +20,18 @@ public:
 
 public:
 	glm::mat4 GetProjectionTransform() const {
-		return glm::perspective(glm::radians(60.f), _half_size.x / _half_size.y, _near_positive, _far_positive);
-		return glm::frustum(-_half_size.x, _half_size.x,
-			-_half_size.y, _half_size.y,
-			_near_positive, _far_positive);
-		return glm::perspective(atan(_half_size.y / _near_positive) * 2, _half_size.x / _half_size.y, _near_positive, _far_positive);
+		if (_projection_mode == CPM::Perspective)
+		{
+			return glm::frustum(-_half_size.x, _half_size.x,
+								-_half_size.y, _half_size.y,
+								_near_positive, _far_positive);
+		}
+		else if (_projection_mode == CPM::Orthogonal)
+		{
+			return glm::ortho(-_half_size.x, _half_size.x,
+							  -_half_size.y, _half_size.y,
+							  _near_positive, _far_positive);
+		}
 	}
 
 	void SetFrustum(const glm::vec2& size, float near_positive, float far_positive) {

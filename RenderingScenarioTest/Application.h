@@ -48,6 +48,13 @@ protected:
 		KEY_9,
 		KEY_LIST_SIZE
 	};
+	enum MOUSE_BUTTON
+	{
+		MOUSE_LEFT,
+		MOUSE_WHEEL,
+		MOUSE_RIGHT,
+		MOUSE_BUTTON_SIZE
+	};
 
 public:
 	Application();
@@ -58,13 +65,24 @@ public:
 
 protected:
 	virtual void Update() = 0;
+	virtual void processKeyInput() {}
+	virtual void processMouseInput() {}
 	bool IsPressed(KEY_LIST code)
 	{
 		return _keys[(int)code];
 	}
+	bool IsPressed(MOUSE_BUTTON code)
+	{
+		return _mouseButtons[(int)code];
+	}
+	int GetDeltaOfMouseX() { return _mouseDeltaX; }
+	int GetDeltaOfMouseY() { return _mouseDeltaY; }
+	int GetDeltaOfWheelX() { return _wheelDeltaX; }
+	int GetDeltaOfWheelY() { return _wheelDeltaY; }
 
 private:
 	void resetKeys();
+	void resetMouse();
 
 private:
 	bool m_windowShouldClose;
@@ -74,4 +92,11 @@ protected:
 
 private:
 	bool* _keys;
+	bool* _mouseButtons;
+	int _mouseCurX;
+	int _mouseCurY;
+	int _mouseDeltaX;
+	int _mouseDeltaY;
+	int _wheelDeltaX;
+	int _wheelDeltaY;
 };
