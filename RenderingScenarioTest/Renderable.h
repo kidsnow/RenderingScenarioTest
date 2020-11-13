@@ -26,8 +26,13 @@ private:
 
 typedef enum NormalBlendMode
 {
-	DIFFERENTIAL,
+	LINEAR,
+	OVERLAY,
+	PARTIAL_DERIVATIVE,
+	WHITEOUT,
 	UDN,
+	REORIENTED,
+	UNITY,
 	MODE_NUM
 } NBM;
 
@@ -45,7 +50,7 @@ public:
 	void BindTexture(Texture* texture);
 	void AddDetail(Renderable* detail);
 	void SetNormalBlendMode(NBM mode) { _normalBlendMode = mode; }
-	void ToggleNormalBlendMode() { _normalBlendMode = (NBM)((_normalBlendMode + 1) % MODE_NUM); }
+	void ToggleNormalBlendMode();
 	void BlendNormalMap(bool dumpFlag = false);
 	Texture* GetTexture() { return _texture; }
 

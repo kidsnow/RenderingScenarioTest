@@ -3,6 +3,8 @@
 #include "Framebuffer.h"
 #include "ShaderManager.h"
 
+#include <iostream>
+
 TextureForBlending::TextureForBlending(int width, int height) :
 	_width(width),
 	_height(height),
@@ -31,7 +33,7 @@ Renderable::Renderable(glm::vec2 size) :
 	_vertices(nullptr),
 	_texture(nullptr),
 	_textureForBlending(nullptr),
-	_normalBlendMode(DIFFERENTIAL)
+	_normalBlendMode(PARTIAL_DERIVATIVE)
 {
 	initializeVAO();
 }
@@ -73,6 +75,37 @@ void Renderable::initializeVAO()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+}
+
+void Renderable::ToggleNormalBlendMode()
+{
+	_normalBlendMode = (NBM)((_normalBlendMode + 1) % MODE_NUM);
+	std::cout << "Current blend mode: ";
+	switch (_normalBlendMode)
+	{
+	case LINEAR:
+		std::cout << "LINEAR";
+		break;
+	case OVERLAY:
+		std::cout << "OVERLAY";
+		break;
+	case PARTIAL_DERIVATIVE:
+		std::cout << "PARTIAL_DERIVATIVE";
+		break;
+	case WHITEOUT:
+		std::cout << "WHITEOUT";
+		break;
+	case UDN:
+		std::cout << "UDN";
+		break;
+	case REORIENTED:
+		std::cout << "REORIENTED";
+		break;
+	case UNITY:
+		std::cout << "UNITY";
+		break;
+	}
+	std::cout << std::endl;
 }
 
 void Renderable::BlendNormalMap(bool dumpFlag)
