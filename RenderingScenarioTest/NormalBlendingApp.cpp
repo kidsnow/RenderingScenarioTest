@@ -37,8 +37,8 @@ NormalBlendingApp::NormalBlendingApp() :
 	_detailTexture2 = new Texture("resources/brick.png");
 	_detailRectangle2->BindTexture(_detailTexture2);
 
-	_baseRectangle->AddDetail(_detailRectangle);
-	_baseRectangle->AddDetail(_detailRectangle2);
+	_baseRectangle->AddDetail(DETAIL_CENTER, _detailRectangle);
+	_baseRectangle->AddDetail(DETAIL_CENTER, _detailRectangle2);
 }
 
 NormalBlendingApp::~NormalBlendingApp()

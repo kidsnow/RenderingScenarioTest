@@ -4,6 +4,8 @@
 #include "ShaderManager.h"
 
 #include <iostream>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/transform.hpp>
 
 TextureForBlending::TextureForBlending(int width, int height) :
 	_width(width),
@@ -25,6 +27,40 @@ void TextureForBlending::SwapTextures()
 {
 	_target = (_target + 1) % 2;
 	_source = (_source + 1) % 2;
+}
+
+glm::mat3 DetailRenderable::GetTransform()
+{
+	if (_type == DETAIL_CENTER)
+		return glm::mat3(1.0);
+
+	glm::mat3 scale(1.0);
+	scale[1][1] = 10.0;
+
+	glm::mat3 rotation(1.0);
+	glm::mat3 translation(1.0);
+	float angle = 0.0;
+	switch (_type)
+	{
+	case DETAIL_TOP:
+		break;
+	case DETAIL_BOTTOM:
+		angle = 180.0;
+		break;
+	case DETAIL_LEFT:
+		break;
+	case DETAIL_RIGHT:
+		break;
+	}
+
+	float rad = angle * 3.141592653589793 / 180.0;
+
+	rotation[0][0] = cos(rad);
+	rotation[1][0] = -sin(rad);
+	rotation[0][1] = sin(rad);
+	rotation[1][1] = cos(rad);
+
+	return translation * rotation * scale;
 }
 
 Renderable::Renderable(glm::vec2 size) :
@@ -154,9 +190,10 @@ void Renderable::BlendNormalMap(bool dumpFlag)
 	{
 		_textureForBlending->SwapTextures();
 		Texture* baseTexture = _textureForBlending->GetSourceTexture();
-		Texture* detailTexture = detail->GetTexture();
-
-		shader->SetMatrix4("MVP", identity);
+		Texture* detailTexture = detail->GetRenderable()->GetTexture();
+		
+		glm::mat3 transform = detail->GetTransform();
+		shader->SetMatrix3("toDetailTexCoord", transform);
 
 		shader->SetInteger("baseTexture", 0);
 		baseTexture->SetUnitIndex(0);
@@ -204,8 +241,9 @@ void Renderable::BindTexture(Texture* texture)
 	_texture = texture;
 }
 
-void Renderable::AddDetail(Renderable* detail)
+void Renderable::AddDetail(DetailType type, Renderable* detailRenderable)
 {
+	DetailRenderable* detail = new DetailRenderable(type, detailRenderable);
 	_detailList.push_back(detail);
 	BlendNormalMap();
 }

@@ -5,6 +5,8 @@ layout (location = 0) out vec4 final_color;
 in vec2 UV;
 in vec3 pos;
 
+uniform mat3 toDetailTexCoord;
+
 uniform int blendMode;
 
 uniform sampler2D baseTexture;
@@ -18,11 +20,33 @@ float overlay(float x, float y)
 		return 1.0 - 2.0*(1.0 - x)*(1.0 - y);
 }
 
+bool hits(float s, float t)
+{
+	if (s < 0.0 || s > 1.0)
+		return false;
+	if (t < 0.0 || t > 1.0)
+		return false;
+	return true;
+}
+
 void main(void)
 {
 	vec3 result;
+
+	vec3 detailTexCoord;
+	//detailTexCoord = toDetailTexCoord * UV;
+	detailTexCoord = toDetailTexCoord * vec3(UV.x - 0.5, UV.y - 0.5, 1.0);
+	detailTexCoord += vec3(0.5, 0.5, 0.0);
+
+	if (!hits(detailTexCoord.x, detailTexCoord.y))
+	{
+		result = texture2D(baseTexture, vec2(UV.x, -UV.y)).xyz;
+		final_color = vec4(result, 1.0);
+		return;
+	}
+
 	vec3 base = texture2D(baseTexture, vec2(UV.x, -UV.y)).xyz;
-	vec3 detail = texture2D(detailTexture, vec2(UV.x, -UV.y)).xyz;
+	vec3 detail = texture2D(detailTexture, vec2(detailTexCoord.x, -detailTexCoord.y)).xyz;
 	base = base*2.0 - 1.0;
 	detail = detail*2.0 - 1.0;
 

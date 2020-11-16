@@ -6,6 +6,7 @@
 #include <vector>
 
 class Texture;
+class Renderable;
 
 class TextureForBlending
 {
@@ -22,6 +23,33 @@ private:
 	int _width, _height;
 	int _target, _source;
 	Texture* _texture[2];
+};
+
+typedef enum DetailType
+{
+	DETAIL_TOP,
+	DETAIL_BOTTOM,
+	DETAIL_LEFT,
+	DETAIL_RIGHT,
+	DETAIL_CENTER
+};
+
+class DetailRenderable
+{
+public:
+	DetailRenderable(DetailType type, Renderable* renderable) :
+		_type(type), _renderable(renderable)
+	{}
+	~DetailRenderable() {}
+
+public:
+	DetailType GetType() { return _type; }
+	Renderable* GetRenderable() { return _renderable; }
+	glm::mat3 GetTransform();
+
+private:
+	DetailType _type;
+	Renderable* _renderable;
 };
 
 typedef enum NormalBlendMode
@@ -48,7 +76,7 @@ private:
 public:
 	void Render();
 	void BindTexture(Texture* texture);
-	void AddDetail(Renderable* detail);
+	void AddDetail(DetailType type, Renderable* detail);
 	void LogCurrentMode();
 	void SetNormalBlendMode(NBM mode);
 	void ToggleNormalBlendMode();
@@ -61,6 +89,6 @@ private:
 	GLfloat* _vertices;
 	Texture* _texture;
 	TextureForBlending* _textureForBlending;
-	std::vector<Renderable*> _detailList;
+	std::vector<DetailRenderable*> _detailList;
 	NBM _normalBlendMode;
 };
