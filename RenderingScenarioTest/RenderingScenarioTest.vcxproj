@@ -32,6 +32,7 @@
     <ClCompile Include="NBDetailRectangle.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NBRectangle.cpp" />
     <ClCompile Include="NormalBlendingApp.cpp" />
     <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="Renderable.cpp" />
@@ -46,6 +47,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="NBDetailRectangle.h" />
     <ClInclude Include="Framebuffer.h" />
+    <ClInclude Include="NBRectangle.h" />
     <ClInclude Include="NormalBlendingApp.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Rectangle.h" />

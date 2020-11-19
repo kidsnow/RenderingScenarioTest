@@ -4,7 +4,7 @@
 #include "glm/vec2.hpp";
 
 class Camera;
-class Rectangle;
+class NBRectangle;
 class Texture;
 
 
@@ -26,9 +26,9 @@ private:
 	glm::vec2 _frustumSize;
 	float _near;
 	float _far;
-	Rectangle* _baseRectangle;
-	Rectangle* _detailRectangle;
-	Rectangle* _detailRectangle2;
+	NBRectangle* _baseRectangle;
+	NBRectangle* _detailRectangle;
+	NBRectangle* _detailRectangle2;
 	Texture* _baseTexture;
 	Texture* _detailTexture;
 	Texture* _detailTexture2;

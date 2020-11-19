@@ -82,6 +82,9 @@
     <ClCompile Include="NBDetailRectangle.cpp">
       <Filter>Source Files\NormalBlending</Filter>
     </ClCompile>
+    <ClCompile Include="NBRectangle.cpp">
+      <Filter>Source Files\NormalBlending</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NormalBlendingApp.h">
@@ -121,6 +124,9 @@
       <Filter>Header Files\NormalBlending</Filter>
     </ClInclude>
     <ClInclude Include="NBDetailRectangle.h">
+      <Filter>Header Files\NormalBlending</Filter>
+    </ClInclude>
+    <ClInclude Include="NBRectangle.h">
       <Filter>Header Files\NormalBlending</Filter>
     </ClInclude>
   </ItemGroup>
