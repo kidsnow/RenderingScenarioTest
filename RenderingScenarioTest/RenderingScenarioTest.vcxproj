@@ -29,26 +29,32 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="NBDetailRectangle.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NormalBlendingApp.cpp" />
+    <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="Renderable.cpp" />
     <ClCompile Include="SDLWindow.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureForBlending.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="NBDetailRectangle.h" />
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="NormalBlendingApp.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="Rectangle.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="SDLWindow.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureForBlending.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

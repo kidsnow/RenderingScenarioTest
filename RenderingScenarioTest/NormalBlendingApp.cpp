@@ -2,7 +2,7 @@
 
 #include "ShaderManager.h"
 #include "Camera.h"
-#include "Renderable.h"
+#include "Rectangle.h"
 #include "Texture.h"
 
 
@@ -22,17 +22,17 @@ NormalBlendingApp::NormalBlendingApp() :
 	_camera->SetPosition(glm::vec4(0.0, 0.0, 500.0, 1.0));
 	_camera->SetFrustum(glm::vec2(960, 540), _near, _far);
 
-	_baseRectangle = new Renderable(glm::vec2(320, 320));
+	_baseRectangle = new Rectangle(glm::vec2(320, 320));
 	_baseRectangle->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
 	_baseTexture = new Texture("resources/Top_N.png");
 	_baseRectangle->BindTexture(_baseTexture);
 
-	_detailRectangle = new Renderable(glm::vec2(320, 320));
+	_detailRectangle = new Rectangle(glm::vec2(320, 320));
 	_detailRectangle->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
 	_detailTexture = new Texture("resources/NormalDetail.png");
 	_detailRectangle->BindTexture(_detailTexture);
 
-	_detailRectangle2 = new Renderable(glm::vec2(320, 320));
+	_detailRectangle2 = new Rectangle(glm::vec2(320, 320));
 	_detailRectangle2->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
 	_detailTexture2 = new Texture("resources/brick.png");
 	_detailRectangle2->BindTexture(_detailTexture2);
