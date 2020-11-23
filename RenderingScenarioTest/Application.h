@@ -3,6 +3,7 @@
 #include "SDLWindow.h"
 #include "Shader.h"
 
+class Camera;
 
 class Application
 {
@@ -65,8 +66,8 @@ public:
 
 protected:
 	virtual void Update() = 0;
-	virtual void processKeyInput() {}
-	virtual void processMouseInput() {}
+	virtual void processKeyInput();
+	virtual void processMouseInput();
 	bool IsPressed(KEY_LIST code)
 	{
 		return _keys[(int)code];
@@ -79,6 +80,7 @@ protected:
 	int GetDeltaOfMouseY() { return _mouseDeltaY; }
 	int GetDeltaOfWheelX() { return _wheelDeltaX; }
 	int GetDeltaOfWheelY() { return _wheelDeltaY; }
+	glm::mat4 GetViewProjectionMatrix();
 
 private:
 	void resetKeys();
@@ -89,6 +91,10 @@ private:
 
 protected:
 	SDLWindow* _window;
+	Camera* _camera;
+	glm::vec2 _frustumSize;
+	float _near;
+	float _far;
 
 private:
 	bool* _keys;

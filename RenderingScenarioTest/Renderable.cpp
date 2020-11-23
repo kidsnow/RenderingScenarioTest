@@ -38,6 +38,11 @@ void Renderable::initializeVAO()
 
 void Renderable::Render()
 {
+	if (_texture != nullptr)
+	{
+		_texture->Render();
+	}
+
 	glBindVertexArray(_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glFinish();

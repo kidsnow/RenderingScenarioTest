@@ -33,7 +33,10 @@ void NBRectangle::Render()
 			_textureForBlending->GetTargetTexture()->Render();
 		}
 	}
-	Rectangle::Render();
+
+	glBindVertexArray(_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glFinish();
 }
 
 void NBRectangle::AddDetail(NBDetailType type, Rectangle* detailRectangle)

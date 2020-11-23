@@ -20,8 +20,6 @@ protected:
 	void initializeVAO();
 
 	GLfloat* _vertices;
-	Texture* _texture;
-
-private:
 	GLuint _vao;
+	Texture* _texture;
 };

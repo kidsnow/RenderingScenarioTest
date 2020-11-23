@@ -1,11 +1,16 @@
 #include "application.h"
 
+#include "Camera.h"
 #include <iostream>
 
 
 Application::Application() :
 	m_windowShouldClose(false),
 	_window(nullptr),
+	_camera(nullptr),
+	_frustumSize(960, 540),
+	_near(100.0),
+	_far(1000.0),
 	_mouseCurX(0),
 	_mouseCurY(0),
 	_mouseDeltaX(0),
@@ -14,8 +19,14 @@ Application::Application() :
 	_wheelDeltaY(0)
 {
 	_window = new SDLWindow("Main Window", 100, 100, 960, 540);
+
 	_keys = new bool[(int)KEY_LIST::KEY_LIST_SIZE];
 	_mouseButtons = new bool[(int)MOUSE_BUTTON::MOUSE_BUTTON_SIZE];
+
+	_camera = new Camera();
+	_camera->SetProjectionMode(CPM::Orthogonal);
+	_camera->SetPosition(glm::vec4(0.0, 0.0, 500.0, 1.0));
+	_camera->SetFrustum(glm::vec2(960, 540), _near, _far);
 
 	for (int i = 0; i < (int)KEY_LIST::KEY_LIST_SIZE; i++)
 	{
@@ -142,4 +153,51 @@ void Application::resetMouse()
 	_mouseDeltaY = 0;
 	_wheelDeltaX = 0;
 	_wheelDeltaY = 0;
+}
+
+void Application::processKeyInput()
+{
+	if (IsPressed(KEY_W))
+	{
+		_camera->Move(glm::vec3(0.0, 10.0, 0.0));
+	}
+	if (IsPressed(KEY_A))
+	{
+		_camera->Move(glm::vec3(-10.0, 0.0, 0.0));
+	}
+	if (IsPressed(KEY_S))
+	{
+		_camera->Move(glm::vec3(0.0, -10.0, 0.0));
+	}
+	if (IsPressed(KEY_D))
+	{
+		_camera->Move(glm::vec3(10.0, 0.0, 0.0));
+	}
+	if (IsPressed(KEY_Q))
+	{
+		_camera->Move(glm::vec3(0.0, 0.0, -10.0));
+	}
+	if (IsPressed(KEY_E))
+	{
+		_camera->Move(glm::vec3(0.0, 0.0, 10.0));
+	}
+}
+
+void Application::processMouseInput()
+{
+	if (IsPressed(MOUSE_LEFT))
+	{
+		_camera->Move(glm::vec3(-GetDeltaOfMouseX(), GetDeltaOfMouseY(), 0.0));
+	}
+	float mag = GetDeltaOfWheelY() * 0.1;
+	_frustumSize *= mag + 1.0;
+	_camera->SetFrustum(_frustumSize, _near, _far);
+}
+
+glm::mat4 Application::GetViewProjectionMatrix()
+{
+	glm::mat4 view = _camera->GetInvTransform();
+	glm::mat4 proj = _camera->GetProjectionTransform();
+
+	return proj*view;
 }

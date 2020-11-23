@@ -3,7 +3,6 @@
 #include "Application.h"
 #include "glm/vec2.hpp";
 
-class Camera;
 class NBRectangle;
 class Texture;
 
@@ -22,10 +21,6 @@ private:
 	virtual void processMouseInput();
 
 private:
-	Camera* _camera;
-	glm::vec2 _frustumSize;
-	float _near;
-	float _far;
 	NBRectangle* _baseRectangle;
 	NBRectangle* _detailRectangle;
 	NBRectangle* _detailRectangle2;
