@@ -25,6 +25,12 @@
     <Filter Include="Header Files\NormalBlending">
       <UniqueIdentifier>{f5e49a43-cf2a-4dad-885e-820245b70440}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\MultipleTextures">
+      <UniqueIdentifier>{32b40733-1229-46b9-a322-bbbba9e0312a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MultipleTextures">
+      <UniqueIdentifier>{d437913a-10cb-48be-a303-c9e684c24d9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="PolygonPlanet.png">
@@ -42,6 +48,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="normal_blend.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="multiple_textures.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="multiple_textures.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
@@ -84,6 +96,9 @@
     </ClCompile>
     <ClCompile Include="NBRectangle.cpp">
       <Filter>Source Files\NormalBlending</Filter>
+    </ClCompile>
+    <ClCompile Include="MultipleTexturesApp.cpp">
+      <Filter>Source Files\MultipleTextures</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +143,9 @@
     </ClInclude>
     <ClInclude Include="NBRectangle.h">
       <Filter>Header Files\NormalBlending</Filter>
+    </ClInclude>
+    <ClInclude Include="MultipleTexturesApp.h">
+      <Filter>Header Files\MultipleTextures</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

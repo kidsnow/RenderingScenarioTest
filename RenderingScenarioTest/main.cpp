@@ -1,10 +1,10 @@
 ﻿#include "application.h"
-#include "NormalBlendingApp.h"
+#include "MultipleTexturesApp.h"
 
 
 int main(int argc, char** argv)
 {
-	Application* app = new NormalBlendingApp();
+	Application* app = new MultipleTexturesApp();
 
 	app->Run();
 

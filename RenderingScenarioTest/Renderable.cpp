@@ -15,7 +15,6 @@ Renderable::~Renderable()
 
 void Renderable::initializeVAO()
 {
-
 	glGenVertexArrays(1, &_vao);
 	glBindVertexArray(_vao);
 

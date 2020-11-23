@@ -17,6 +17,7 @@ public:
 	int GetHeight() { return _height; }
 	GLuint GetID() { return _id; }
 	void SetUnitIndex(int index) { _unitIndex = index; }
+	int GetUnitIndex() { return _unitIndex; }
 
 private:
 	unsigned char* loadImage(const char* fileName, int& width, int& height);

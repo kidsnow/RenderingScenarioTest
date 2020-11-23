@@ -6,6 +6,7 @@ ShaderManager::ShaderManager()
 {
 	addShader("simple");
 	addShader("normal_blend");
+	addShader("multiple_textures");
 }
 
 ShaderManager::~ShaderManager()

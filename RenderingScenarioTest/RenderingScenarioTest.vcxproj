@@ -22,6 +22,8 @@
     <Image Include="PolygonPlanet.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="multiple_textures.frag" />
+    <None Include="multiple_textures.vert" />
     <None Include="normal_blend.frag" />
     <None Include="normal_blend.vert" />
     <None Include="simple.frag" />
@@ -29,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="MultipleTexturesApp.cpp" />
     <ClCompile Include="NBDetailRectangle.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -45,6 +48,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="MultipleTexturesApp.h" />
     <ClInclude Include="NBDetailRectangle.h" />
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="NBRectangle.h" />

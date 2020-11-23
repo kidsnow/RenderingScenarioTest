@@ -41,6 +41,7 @@ Application::Application() :
 
 Application::~Application()
 {
+	delete _camera;
 	delete _keys;
 	delete _window;
 }
