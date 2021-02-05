@@ -9,7 +9,8 @@
 NBRectangle::NBRectangle(glm::vec2 size) :
 	Rectangle(size),
 	_textureForBlending(nullptr),
-	_normalBlendMode(PARTIAL_DERIVATIVE)
+	_normalBlendMode(PARTIAL_DERIVATIVE),
+	_swapBaseDetail(false)
 {
 
 }
@@ -74,6 +75,7 @@ void NBRectangle::BlendNormalMap(bool dumpFlag)
 	shader->Use();
 	//shader->SetInteger("blendMode", _normalBlendMode);
 	shader->SetInteger("blendMode", _normalBlendMode);
+	shader->SetInteger("swapBaseDetail", _swapBaseDetail);
 
 	for (auto detail : _detailList)
 	{
@@ -114,6 +116,16 @@ void NBRectangle::SetNormalBlendMode(NBM mode)
 	BlendNormalMap();
 }
 
+void NBRectangle::SwapBaseDetail()
+{
+	if (_swapBaseDetail)
+		_swapBaseDetail = false;
+	else
+		_swapBaseDetail = true;
+	LogCurrentMode();
+	BlendNormalMap();
+}
+
 void NBRectangle::ToggleNormalBlendMode()
 {
 	_normalBlendMode = (NBM)((_normalBlendMode + 1) % MODE_NUM);
@@ -147,6 +159,10 @@ void NBRectangle::LogCurrentMode()
 	case UNITY:
 		std::cout << "UNITY";
 		break;
+	}
+	if (_swapBaseDetail)
+	{
+		std::cout << " + Swap";
 	}
 	std::cout << std::endl;
 }

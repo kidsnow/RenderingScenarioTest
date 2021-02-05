@@ -8,6 +8,7 @@ in vec3 pos;
 uniform mat3 toDetailTexCoord;
 
 uniform int blendMode;
+uniform int swapBaseDetail;
 
 uniform sampler2D baseTexture;
 uniform sampler2D detailTexture;
@@ -47,6 +48,11 @@ void main(void)
 
 	vec3 base = texture2D(baseTexture, vec2(UV.x, -UV.y)).xyz;
 	vec3 detail = texture2D(detailTexture, vec2(detailTexCoord.x, -detailTexCoord.y)).xyz;
+	if (swapBaseDetail == 1)
+	{
+		detail = texture2D(baseTexture, vec2(UV.x, -UV.y)).xyz;
+		base = texture2D(detailTexture, vec2(detailTexCoord.x, -detailTexCoord.y)).xyz;
+	}
 	base = base*2.0 - 1.0;
 	detail = detail*2.0 - 1.0;
 

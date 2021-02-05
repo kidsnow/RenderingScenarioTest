@@ -13,11 +13,13 @@ public:
 	void AddDetail(NBDetailType type, Rectangle* detail);
 	void BlendNormalMap(bool dumpFlag = false);
 	void SetNormalBlendMode(NBM mode);
+	void SwapBaseDetail();
 	void ToggleNormalBlendMode();
 	void LogCurrentMode();
 
 private:
 	TextureForBlending* _textureForBlending;
 	NBM _normalBlendMode;
+	bool _swapBaseDetail;
 	std::vector<NBDetailRectangle*> _detailList;
 };

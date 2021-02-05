@@ -17,6 +17,9 @@ MultipleTexturesApp::MultipleTexturesApp() :
 	int maxTex;
 	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex);
 	std::cout << "Max texture units count supported: " << maxTex << std::endl;
+	int maxUniforms;
+	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &maxUniforms);
+	std::cout << "Max uniform units count supported: " << maxUniforms << std::endl;
 	_texCount = _texCountX * _texCountY;
 	for (int i = 0; i < _texCount; i++)
 	{

@@ -20,16 +20,16 @@ NormalBlendingApp::NormalBlendingApp() :
 
 	_detailRectangle = new NBRectangle(glm::vec2(320, 320));
 	_detailRectangle->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
-	_detailTexture = new Texture("resources/NormalDetail.png");
+	_detailTexture = new Texture("resources/FrontBuffer.ppm");
 	_detailRectangle->BindTexture(_detailTexture);
 
-	_detailRectangle2 = new NBRectangle(glm::vec2(320, 320));
-	_detailRectangle2->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
-	_detailTexture2 = new Texture("resources/brick.png");
-	_detailRectangle2->BindTexture(_detailTexture2);
-
+	//_detailRectangle2 = new NBRectangle(glm::vec2(320, 320));
+	//_detailRectangle2->SetPosition(glm::vec4(0.0, 0.0, 0.0, 1.0));
+	//_detailTexture2 = new Texture("resources/brick.png");
+	//_detailRectangle2->BindTexture(_detailTexture2);
+	
 	_baseRectangle->AddDetail(DETAIL_CENTER, _detailRectangle);
-	_baseRectangle->AddDetail(DETAIL_CENTER, _detailRectangle2);
+	//_baseRectangle->AddDetail(DETAIL_CENTER, _detailRectangle2);
 }
 
 NormalBlendingApp::~NormalBlendingApp()
@@ -49,6 +49,10 @@ void NormalBlendingApp::processKeyInput()
 	if (IsPressed(KEY_M))
 	{
 		_baseRectangle->ToggleNormalBlendMode();
+	}
+	if (IsPressed(KEY_F))
+	{
+		_baseRectangle->SwapBaseDetail();
 	}
 	for (int i = KEY_1; i < KEY_1 + MODE_NUM; i++)
 	{
@@ -83,6 +87,5 @@ void NormalBlendingApp::Update()
 	shader->Use();
 
 	shader->SetMatrix4("MVP", GetViewProjectionMatrix()*_baseRectangle->GetTransform());
-
 	_baseRectangle->Render();
 }
