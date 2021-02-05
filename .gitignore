@@ -1,6 +1,7 @@
 # User defined list
 *.dat
 *.ppm
+resources/
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,c++

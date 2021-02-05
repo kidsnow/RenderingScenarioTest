@@ -1,6 +1,4 @@
-#version 330
-
-layout (location = 0) out vec4 final_color;
+#version 120
 
 in vec2 UV;
 in vec3 pos;
@@ -41,52 +39,52 @@ void main(void)
     switch(groupIdx)
     {
     case 0:
-        final_color = texture2D(texture0[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture0[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 1:
-        final_color = texture2D(texture1[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture1[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 2:
-        final_color = texture2D(texture2[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture2[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 3:
-        final_color = texture2D(texture3[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture3[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 4:
-        final_color = texture2D(texture4[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture4[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 5:
-        final_color = texture2D(texture5[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture5[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 6:
-        final_color = texture2D(texture6[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture6[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 7:
-        final_color = texture2D(texture7[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture7[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 8:
-        final_color = texture2D(texture8[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture8[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 9:
-        final_color = texture2D(texture9[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture9[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 10:
-        final_color = texture2D(texture10[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture10[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 11:
-        final_color = texture2D(texture11[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture11[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 12:
-        final_color = texture2D(texture12[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture12[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 13:
-        final_color = texture2D(texture13[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture13[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 14:
-        final_color = texture2D(texture14[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture14[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     case 15:
-        final_color = texture2D(texture15[texIndex - groupIdx*16], vec2(refX, -refY));
+        gl_FragColor = texture2D(texture15[texIndex - groupIdx*16], vec2(refX, -refY));
         break;
     }
 }

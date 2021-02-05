@@ -31,6 +31,12 @@
     <Filter Include="Header Files\MultipleTextures">
       <UniqueIdentifier>{d437913a-10cb-48be-a303-c9e684c24d9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\OpenGLExercise">
+      <UniqueIdentifier>{fa380b4a-a51f-4625-9486-ec213a4f3c13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\OpenGLExercise">
+      <UniqueIdentifier>{471aca7b-b102-4127-9a73-161f1d4ef65d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="PolygonPlanet.png">
@@ -100,6 +106,9 @@
     <ClCompile Include="MultipleTexturesApp.cpp">
       <Filter>Source Files\MultipleTextures</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGLExerciseApp.cpp">
+      <Filter>Source Files\OpenGLExercise</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NormalBlendingApp.h">
@@ -146,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="MultipleTexturesApp.h">
       <Filter>Header Files\MultipleTextures</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLExerciseApp.h">
+      <Filter>Header Files\OpenGLExercise</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
