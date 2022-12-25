@@ -19,6 +19,7 @@ private:
 
 private:
 	void addShader(std::string name);
+	void addShaderFromMemory(std::string name);
 
 public:
 	static ShaderManager* Instance();

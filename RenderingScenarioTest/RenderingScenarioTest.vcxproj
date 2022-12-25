@@ -31,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="FramebufferApp.cpp" />
     <ClCompile Include="MultipleTexturesApp.cpp" />
     <ClCompile Include="NBDetailRectangle.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
@@ -48,6 +49,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="FramebufferApp.h" />
     <ClInclude Include="MultipleTexturesApp.h" />
     <ClInclude Include="NBDetailRectangle.h" />
     <ClInclude Include="Framebuffer.h" />

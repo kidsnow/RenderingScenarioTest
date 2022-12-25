@@ -31,6 +31,7 @@ public:
 	Shader  &Use();
 	// Compiles the shader from given source code
 	bool    CompileRenderingShader(const char *vsFileName, const char *psFileName, const char *gsFileName = nullptr); // Note: geometry source code is optional 
+	bool	CompileRenderingShaderFromMemory(const char* vsSrc, const char* fsSrc, const char *gsSrc = nullptr);
 	bool	CompileComputingShader(const char *csFileName);
 	// Utility functions
 	void    SetFloat(const GLchar *name, GLfloat value, GLboolean useShader = false);
