@@ -3,6 +3,84 @@
 #include "GL/glew.h"
 #include <fstream>
 
+// GL ERROR CHECK
+int CheckGLError(const char* _file, int _line)
+{
+	int    retCode = 0;
+
+#if !defined(NDEBUG) || defined(_DEBUG) // define 없애지 말것 (릴리즈에서는 그릴때마다 glError체크하면 속도저하생김)
+	GLenum glErr;
+	glErr = glGetError();
+	while (glErr != GL_NO_ERROR)
+	{
+		const char* sError = nullptr;
+
+		switch (glErr)
+		{
+		case GL_NO_ERROR:
+			sError = "GL_NO_ERROR";
+			break;
+		case GL_INVALID_ENUM:
+			sError = "GL_INVALID_ENUM";
+			break;
+		case GL_INVALID_VALUE:
+			sError = "GL_INVALID_VALUE";
+			break;
+		case GL_INVALID_OPERATION:
+			sError = "GL_INVALID_OPERATION";
+			break;
+		case GL_STACK_OVERFLOW:
+			sError = "GL_STACK_OVERFLOW";
+			break;
+		case GL_STACK_UNDERFLOW:
+			sError = "GL_STACK_UNDERFLOW";
+			break;
+		case GL_OUT_OF_MEMORY:
+			sError = "GL_OUT_OF_MEMORY";
+			break;
+		case GL_TABLE_TOO_LARGE:
+			sError = "GL_TABLE_TOO_LARGE";
+			break;
+		}
+
+		if (sError)
+			printf("GL Error #%d (%s) in File %s at line: %d \n", glErr, sError, _file, _line);
+		else
+			printf("GL Error #%d (no message available) in File %s at line: %d \n", glErr, _file, _line);
+
+		if (glErr == GL_STACK_UNDERFLOW || glErr == GL_STACK_OVERFLOW)
+		{
+			GLint matrixMode;
+			GLint stackDepth;
+			GLint activeTexture;
+
+			glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
+
+			switch (matrixMode)
+			{
+			case GL_MODELVIEW:
+				glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &stackDepth);
+				printf("GL_MODELVIEW, stack(%d) \n", stackDepth);
+				break;
+			case GL_PROJECTION:
+				glGetIntegerv(GL_PROJECTION_STACK_DEPTH, &stackDepth);
+				printf("GL_PROJECTION, stack(%d) \n", stackDepth);
+				break;
+			case GL_TEXTURE:
+				glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture);
+				glGetIntegerv(GL_TEXTURE_STACK_DEPTH, &stackDepth);
+				printf("GL_TEXTURE, stack(%d) \n", stackDepth);
+				break;
+			}
+		}
+
+		retCode = 1;
+		glErr = glGetError();
+	}
+#endif
+	return retCode;
+}
+
 Framebuffer::Framebuffer(int _width, int _height, int _sampleCount, BufferType _bufferType) :
 	m_width(_width),
 	m_height(_height),
@@ -53,12 +131,14 @@ bool Framebuffer::Initialize()
 		// Generate framebuffer and bind renderbuffer just created
 		{
 			glGenFramebuffers(1, &m_framebufferID);
-			glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_bufferID);
-			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferID);
+			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_bufferID);
+			if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 				return false;
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
+
+		CHECK_GL_ERROR
 	}
 	else if (m_bufferType == BufferType::Texture)
 	{
@@ -82,6 +162,8 @@ bool Framebuffer::Initialize()
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
+
+		CHECK_GL_ERROR
 	}
 
 	return true;
@@ -176,10 +258,13 @@ Framebuffer::BufferType Framebuffer::GetBufferType()
 
 void Framebuffer::DumpBuffer(const char* _filePath, bool _formatP6)
 {
+	CHECK_GL_ERROR;
 	Bind();
 
+	CHECK_GL_ERROR;
 	unsigned char *pixels = (unsigned char*)malloc(sizeof(unsigned char)*m_width*m_height * 4);
 
+	CHECK_GL_ERROR;
 
 	if (m_bufferType == BufferType::Renderbuffer)
 	{
@@ -188,25 +273,27 @@ void Framebuffer::DumpBuffer(const char* _filePath, bool _formatP6)
 		Framebuffer* textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount, Framebuffer::BufferType::Texture);
 		textureFramebuffer->Initialize();
 
+		CHECK_GL_ERROR;
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, GetFramebuffer());
+		CHECK_GL_ERROR;
 		glReadBuffer(GL_COLOR_ATTACHMENT0);
+		CHECK_GL_ERROR;
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, textureFramebuffer->GetFramebuffer());
+		CHECK_GL_ERROR;
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+		CHECK_GL_ERROR;
 		glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		CHECK_GL_ERROR;
 
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, textureFramebuffer->GetFramebuffer());
-		glReadBuffer(GL_COLOR_ATTACHMENT0);
-
-		glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		textureFramebuffer->DumpBuffer(_filePath);
 
 		if (textureFramebuffer != nullptr)
 		{
 			delete textureFramebuffer;
 			textureFramebuffer = nullptr;
 		}
+
+		return;
 	}
 	else
 	{

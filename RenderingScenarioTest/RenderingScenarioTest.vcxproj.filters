@@ -46,6 +46,10 @@
     <None Include="multiple_textures.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
+    <None Include="framebuffer.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NormalBlendingApp.cpp">
@@ -143,5 +147,10 @@
     <ClInclude Include="FramebufferApp.h">
       <Filter>Source Files\Framebuffer</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="framebuffer.vert">
+      <Filter>Resource Files</Filter>
+    </Page>
   </ItemGroup>
 </Project>

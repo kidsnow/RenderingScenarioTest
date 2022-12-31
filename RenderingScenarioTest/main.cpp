@@ -1,12 +1,11 @@
 ﻿#include "application.h"
-#include "MultipleTexturesApp.h"
-#include "NormalBlendingApp.h"
+
+#include "FramebufferApp.h"
 
 
 int main(int argc, char** argv)
 {
-	//Application* app = new MultipleTexturesApp();
-	Application* app = new NormalBlendingApp();
+	Application* app = new FramebufferApp();
 
 	app->Run();
 

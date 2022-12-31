@@ -2,6 +2,8 @@
 
 #include "Application.h"
 
+class Rectangle;
+class Framebuffer;
 
 class FramebufferApp : public Application
 {
@@ -17,5 +19,6 @@ private:
 	virtual void processMouseInput();
 
 private:
-	
+	Rectangle* _rectangle;
+	Framebuffer* _framebuffer;
 };
