@@ -86,7 +86,8 @@ Framebuffer::Framebuffer(int _width, int _height, int _sampleCount, BufferType _
 	m_height(_height),
 	m_bufferType(_bufferType),
 	m_sampleCount(_sampleCount),
-	m_bufferID(0),
+	m_colorBuffer(0),
+	m_depthBuffer(0),
 	m_bufferShared(false),
 	m_framebufferID(0)
 {
@@ -94,21 +95,31 @@ Framebuffer::Framebuffer(int _width, int _height, int _sampleCount, BufferType _
 
 Framebuffer::~Framebuffer()
 {
-	if (m_bufferID != 0)
+	if (m_colorBuffer != 0)
 	{
 		if (m_bufferType == BufferType::Renderbuffer)
 		{
-			glDeleteRenderbuffers(1, (GLuint*)&m_bufferID);
+			glDeleteRenderbuffers(1, (GLuint*)&m_colorBuffer);
 		}
 		else if (m_bufferType == BufferType::Texture)
 		{
 			if (m_bufferShared == false)
 			{
-				glDeleteTextures(1, (GLuint*)&m_bufferID);
+				glDeleteTextures(1, (GLuint*)&m_colorBuffer);
 			}
 		}
-		m_bufferID = 0;
+		m_colorBuffer = 0;
 	}
+
+	if (m_depthBuffer != 0)
+	{
+		if (m_bufferType == BufferType::Renderbuffer)
+		{
+			glDeleteRenderbuffers(1, (GLuint*)&m_depthBuffer);
+		}
+		m_depthBuffer = 0;
+	}
+
 	if (m_framebufferID != 0)
 	{
 		glDeleteFramebuffers(1, (GLuint*)&m_framebufferID);
@@ -122,8 +133,10 @@ bool Framebuffer::Initialize()
 	{
 		// Generate renderbuffer
 		{
-			glGenRenderbuffers(1, &m_bufferID);
-			glBindRenderbuffer(GL_RENDERBUFFER, m_bufferID);
+			glGenRenderbuffers(1, &m_colorBuffer);
+			glBindRenderbuffer(GL_RENDERBUFFER, m_colorBuffer);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_sampleCount, GL_RGBA8, m_width, m_height);
+			glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
 			glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_sampleCount, GL_RGBA8, m_width, m_height);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		}
@@ -132,7 +145,7 @@ bool Framebuffer::Initialize()
 		{
 			glGenFramebuffers(1, &m_framebufferID);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferID);
-			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_bufferID);
+			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_colorBuffer);
 			if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 				return false;
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -144,8 +157,8 @@ bool Framebuffer::Initialize()
 	{
 		// Generate texture
 		{
-			glGenTextures(1, (GLuint*)&m_bufferID);
-			glBindTexture(GL_TEXTURE_2D, m_bufferID);
+			glGenTextures(1, (GLuint*)&m_colorBuffer);
+			glBindTexture(GL_TEXTURE_2D, m_colorBuffer);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -158,7 +171,7 @@ bool Framebuffer::Initialize()
 		{
 			glGenFramebuffers(1, (GLuint*)&m_framebufferID);
 			glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_bufferID, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorBuffer, 0);
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
@@ -188,7 +201,7 @@ unsigned int Framebuffer::GetTexture(bool share)
 	if (share == true)
 		m_bufferShared = true;
 
-	return m_bufferID;
+	return m_colorBuffer;
 }
 
 unsigned int Framebuffer::GenerateCopiedTexture()

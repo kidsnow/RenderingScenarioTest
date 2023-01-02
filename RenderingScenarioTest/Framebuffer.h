@@ -30,7 +30,8 @@ private:
 	int m_width, m_height;
 	int m_sampleCount;
 	BufferType m_bufferType;
-	unsigned int m_bufferID;
+	unsigned int m_colorBuffer;
+	unsigned int m_depthBuffer;
 	bool m_bufferShared;
 	unsigned int m_framebufferID;
 };
