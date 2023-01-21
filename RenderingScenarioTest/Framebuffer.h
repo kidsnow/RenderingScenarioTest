@@ -13,7 +13,7 @@ public:
 	};
 
 public:
-	Framebuffer(int _width, int _height, int _sampleCount, BufferType _bufferType = BufferType::Renderbuffer);
+	Framebuffer(int _width, int _height, int _sampleCount, int _colorAttachmentCount, bool _depthStencilAttachment, BufferType _bufferType);
 	~Framebuffer();
 
 	virtual bool Initialize();
@@ -30,7 +30,7 @@ private:
 	int m_width, m_height;
 	int m_sampleCount;
 	BufferType m_bufferType;
-	unsigned int m_colorBuffer;
+	unsigned int* m_colorBuffers;
 	unsigned int m_depthBuffer;
 	bool m_bufferShared;
 	unsigned int m_framebufferID;

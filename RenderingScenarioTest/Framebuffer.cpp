@@ -81,12 +81,12 @@ int CheckGLError(const char* _file, int _line)
 	return retCode;
 }
 
-Framebuffer::Framebuffer(int _width, int _height, int _sampleCount, BufferType _bufferType) :
+Framebuffer::Framebuffer(int _width, int _height, int _sampleCount, int _colorAttachmentCount, bool _depthStencilAttachment, BufferType _bufferType) :
 	m_width(_width),
 	m_height(_height),
 	m_bufferType(_bufferType),
 	m_sampleCount(_sampleCount),
-	m_colorBuffer(0),
+	m_colorBuffer(nullptr),
 	m_depthBuffer(0),
 	m_bufferShared(false),
 	m_framebufferID(0)
@@ -136,8 +136,10 @@ bool Framebuffer::Initialize()
 			glGenRenderbuffers(1, &m_colorBuffer);
 			glBindRenderbuffer(GL_RENDERBUFFER, m_colorBuffer);
 			glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_sampleCount, GL_RGBA8, m_width, m_height);
+
 			glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_sampleCount, GL_RGBA8, m_width, m_height);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_sampleCount, GL_DEPTH_COMPONENT, m_width, m_height);
+
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		}
 
@@ -146,6 +148,7 @@ bool Framebuffer::Initialize()
 			glGenFramebuffers(1, &m_framebufferID);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferID);
 			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_colorBuffer);
+			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
 			if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 				return false;
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
