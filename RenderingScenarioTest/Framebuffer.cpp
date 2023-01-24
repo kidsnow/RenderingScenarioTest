@@ -3,6 +3,10 @@
 #include "GL/glew.h"
 #include <fstream>
 
+const Framebuffer::BufferAttachment Framebuffer::BufferAttachment::Depth(GL_DEPTH_ATTACHMENT);
+const Framebuffer::BufferAttachment Framebuffer::BufferAttachment::Stencil(GL_STENCIL_ATTACHMENT);
+const Framebuffer::BufferAttachment Framebuffer::BufferAttachment::DepthStencil(GL_DEPTH_STENCIL_ATTACHMENT);
+
 // GL ERROR CHECK
 int CheckGLError(const char* _file, int _line)
 {
@@ -81,12 +85,13 @@ int CheckGLError(const char* _file, int _line)
 	return retCode;
 }
 
-Framebuffer::Framebuffer(int _width, int _height, int _sampleCount, int _colorAttachmentCount, bool _depthStencilAttachment, BufferType _bufferType) :
+Framebuffer::Framebuffer(int _width, int _height, int _sampleCount) :
 	m_width(_width),
 	m_height(_height),
-	m_bufferType(_bufferType),
 	m_sampleCount(_sampleCount),
-	m_colorBuffer(nullptr),
+	m_colorAttachmentCount(_colorAttachmentCount),
+	m_bufferType(_bufferType),
+	m_colorBuffers(nullptr),
 	m_depthBuffer(0),
 	m_bufferShared(false),
 	m_framebufferID(0)
@@ -95,20 +100,23 @@ Framebuffer::Framebuffer(int _width, int _height, int _sampleCount, int _colorAt
 
 Framebuffer::~Framebuffer()
 {
-	if (m_colorBuffer != 0)
+	if (m_colorBuffers != nullptr)
 	{
 		if (m_bufferType == BufferType::Renderbuffer)
 		{
-			glDeleteRenderbuffers(1, (GLuint*)&m_colorBuffer);
+			glDeleteRenderbuffers(m_colorAttachmentCount, (GLuint*)m_colorBuffers);
 		}
 		else if (m_bufferType == BufferType::Texture)
 		{
 			if (m_bufferShared == false)
 			{
-				glDeleteTextures(1, (GLuint*)&m_colorBuffer);
+				glDeleteTextures(m_colorAttachmentCount, (GLuint*)m_colorBuffers);
 			}
 		}
-		m_colorBuffer = 0;
+
+		delete[] m_colorBuffers;
+
+		m_colorBuffers = nullptr;
 	}
 
 	if (m_depthBuffer != 0)
@@ -129,12 +137,14 @@ Framebuffer::~Framebuffer()
 
 bool Framebuffer::Initialize()
 {
+	m_colorBuffers = new unsigned int[m_colorAttachmentCount];
+
 	if (m_bufferType == BufferType::Renderbuffer)
 	{
 		// Generate renderbuffer
 		{
-			glGenRenderbuffers(1, &m_colorBuffer);
-			glBindRenderbuffer(GL_RENDERBUFFER, m_colorBuffer);
+			glGenRenderbuffers(m_colorAttachmentCount, m_colorBuffers);
+			glBindRenderbuffer(GL_RENDERBUFFER, m_colorBuffers[0]);
 			glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_sampleCount, GL_RGBA8, m_width, m_height);
 
 			glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
@@ -147,7 +157,7 @@ bool Framebuffer::Initialize()
 		{
 			glGenFramebuffers(1, &m_framebufferID);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferID);
-			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_colorBuffer);
+			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_colorBuffers[0]);
 			glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer);
 			if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 				return false;
@@ -160,8 +170,8 @@ bool Framebuffer::Initialize()
 	{
 		// Generate texture
 		{
-			glGenTextures(1, (GLuint*)&m_colorBuffer);
-			glBindTexture(GL_TEXTURE_2D, m_colorBuffer);
+			glGenTextures(1, (GLuint*)&m_colorBuffers[0]);
+			glBindTexture(GL_TEXTURE_2D, m_colorBuffers[0]);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -174,7 +184,7 @@ bool Framebuffer::Initialize()
 		{
 			glGenFramebuffers(1, (GLuint*)&m_framebufferID);
 			glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorBuffer, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorBuffers[0], 0);
 			glDrawBuffer(GL_COLOR_ATTACHMENT0);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
@@ -204,7 +214,7 @@ unsigned int Framebuffer::GetTexture(bool share)
 	if (share == true)
 		m_bufferShared = true;
 
-	return m_colorBuffer;
+	return m_colorBuffers[0];
 }
 
 unsigned int Framebuffer::GenerateCopiedTexture()
@@ -213,7 +223,7 @@ unsigned int Framebuffer::GenerateCopiedTexture()
 
 	if (m_bufferType == BufferType::Renderbuffer)
 	{
-		Framebuffer* textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount, Framebuffer::BufferType::Texture);
+		Framebuffer* textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount, 1, true, BufferType::Texture);
 
 		if (textureFramebuffer->Initialize() == false)
 			return 0;
@@ -267,7 +277,7 @@ int Framebuffer::GetHeight()
 	return m_height;
 }
 
-Framebuffer::BufferType Framebuffer::GetBufferType()
+BufferType Framebuffer::GetBufferType()
 {
 	return m_bufferType;
 }
@@ -284,9 +294,8 @@ void Framebuffer::DumpBuffer(const char* _filePath, bool _formatP6)
 
 	if (m_bufferType == BufferType::Renderbuffer)
 	{
-		// 이상하게 Renderbuffer 자체를 타겟으로 glReadPixels하면 제대로 안나온다...
-		// Todo.
-		Framebuffer* textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount, Framebuffer::BufferType::Texture);
+		// The render buffer cannot be accessed from the CPU, so it needs to be copied to a texture and then dumped.
+		Framebuffer* textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount, 1, true, BufferType::Texture);
 		textureFramebuffer->Initialize();
 
 		CHECK_GL_ERROR;

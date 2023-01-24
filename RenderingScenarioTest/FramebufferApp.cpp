@@ -9,7 +9,7 @@ FramebufferApp::FramebufferApp() :
 	_rectangle(nullptr)
 {
 	_rectangle = new Rectangle(glm::vec2(1, 1));
-	_framebuffer = new Framebuffer(320, 240, 4, Framebuffer::BufferType::Renderbuffer);
+	_framebuffer = new Framebuffer(320, 240, 4, 3, true, Framebuffer::BufferType::Renderbuffer);
 	_framebuffer->Initialize();
 }
 

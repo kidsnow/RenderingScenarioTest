@@ -5,15 +5,33 @@ int CheckGLError(const char* _file, int _line);
 
 class Framebuffer
 {
-public:
-	enum class BufferType
+	class BufferAttachment
 	{
-		Renderbuffer,
-		Texture
+	public:
+		class Color
+		{
+		public:
+			explicit Color(unsigned int _attachment) : m_attachment(_attachment) {}
+			~Color() {}
+
+		private:
+			unsigned int m_attachment;
+		};
+
+		static const BufferAttachment Depth;
+		static const BufferAttachment Stencil;
+		static const BufferAttachment DepthStencil;
+
+	private:
+		constexpr explicit BufferAttachment(Color color);
+		constexpr explicit BufferAttachment(unsigned int _attachment) : m_attachment(_attachment) {}
+
+	private:
+		unsigned int m_attachment;
 	};
 
 public:
-	Framebuffer(int _width, int _height, int _sampleCount, int _colorAttachmentCount, bool _depthStencilAttachment, BufferType _bufferType);
+	Framebuffer(int _width, int _height, int _sampleCount);
 	~Framebuffer();
 
 	virtual bool Initialize();
@@ -29,6 +47,7 @@ public:
 private:
 	int m_width, m_height;
 	int m_sampleCount;
+	int m_colorAttachmentCount;
 	BufferType m_bufferType;
 	unsigned int* m_colorBuffers;
 	unsigned int m_depthBuffer;
