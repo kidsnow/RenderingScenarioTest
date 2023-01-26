@@ -3,9 +3,11 @@
 #include "GL/glew.h"
 #include <fstream>
 
-const Framebuffer::BufferAttachment Framebuffer::BufferAttachment::Depth(GL_DEPTH_ATTACHMENT);
-const Framebuffer::BufferAttachment Framebuffer::BufferAttachment::Stencil(GL_STENCIL_ATTACHMENT);
-const Framebuffer::BufferAttachment Framebuffer::BufferAttachment::DepthStencil(GL_DEPTH_STENCIL_ATTACHMENT);
+const Framebuffer::Attachment Framebuffer::Attachment::Depth(GL_DEPTH_ATTACHMENT);
+const Framebuffer::Attachment Framebuffer::Attachment::Stencil(GL_STENCIL_ATTACHMENT);
+const Framebuffer::Attachment Framebuffer::Attachment::DepthStencil(GL_DEPTH_STENCIL_ATTACHMENT);
+Framebuffer::Attachment::Color::Color(unsigned int _attachment) :
+	m_attachment(GL_COLOR_ATTACHMENT0 + _attachment) {}
 
 // GL ERROR CHECK
 int CheckGLError(const char* _file, int _line)
@@ -84,6 +86,7 @@ int CheckGLError(const char* _file, int _line)
 #endif
 	return retCode;
 }
+
 
 Framebuffer::Framebuffer(int _width, int _height, int _sampleCount) :
 	m_width(_width),
@@ -199,6 +202,35 @@ void Framebuffer::Bind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
 	glViewport(0, 0, m_width, m_height);
+}
+
+Framebuffer& Framebuffer::AddRenderbuffer(Attachment attachment)
+{
+	// Generate renderbuffer.
+	GLuint renderbuffer;
+	glGenRenderbuffers(1, &renderbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_sampleCount, GL_RGBA8, m_width, m_height);
+
+	// Attach renderbuffer to framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebufferID);
+	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GLenum(attachment), GL_RENDERBUFFER, renderbuffer);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+Framebuffer& Framebuffer::AddTexture(Attachment attachment)
+{
+
+}
+
+bool Framebuffer::IsComplete()
+{
+	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		return false;
+
+	return true;
 }
 
 unsigned int Framebuffer::GetFramebuffer()

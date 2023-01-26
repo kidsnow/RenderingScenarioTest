@@ -1,33 +1,63 @@
 #pragma once
 
+
 int CheckGLError(const char* _file, int _line);
 #define CHECK_GL_ERROR CheckGLError(__FILE__, __LINE__);
 
+
+typedef unsigned int GLenum;
 class Framebuffer
 {
-	class BufferAttachment
+public:
+	class Attachment
 	{
+	friend Framebuffer;
 	public:
 		class Color
 		{
 		public:
-			explicit Color(unsigned int _attachment) : m_attachment(_attachment) {}
+			explicit Color(unsigned int _attachment);
 			~Color() {}
 
 		private:
 			unsigned int m_attachment;
 		};
 
-		static const BufferAttachment Depth;
-		static const BufferAttachment Stencil;
-		static const BufferAttachment DepthStencil;
+		static const Attachment Depth;
+		static const Attachment Stencil;
+		static const Attachment DepthStencil;
+
+	public:
+		constexpr explicit operator GLenum() const { return m_attachment; }
 
 	private:
-		constexpr explicit BufferAttachment(Color color);
-		constexpr explicit BufferAttachment(unsigned int _attachment) : m_attachment(_attachment) {}
+		constexpr explicit Attachment(Color color);
+		constexpr explicit Attachment(GLenum _attachment) : m_attachment(_attachment) {}
 
 	private:
-		unsigned int m_attachment;
+		GLenum m_attachment;
+	};
+
+private:
+	class DeviceMemory
+	{
+	public:
+		enum class Type
+		{
+			Renderbuffer,
+			Texture
+		};
+
+	public:
+		DeviceMemory(Type _type);
+		~DeviceMemory();
+
+	public:
+		void Attach(GLenum _framebufferID);
+		void DumpImage();
+
+	private:
+		Type m_type;
 	};
 
 public:
@@ -36,6 +66,12 @@ public:
 
 	virtual bool Initialize();
 	void Bind();
+
+	Framebuffer& AddRenderbuffer(Attachment attachment);
+	Framebuffer& AddTexture(Attachment attachment);
+
+	bool IsComplete();
+
 	unsigned int GetFramebuffer();
 	unsigned int GetTexture(bool share = false);
 	unsigned int GenerateCopiedTexture();
