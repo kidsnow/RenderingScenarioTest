@@ -49,7 +49,7 @@ private:
 		};
 
 	public:
-		DeviceMemory(Type _type);
+		explicit DeviceMemory(Type _type);
 		~DeviceMemory();
 
 	public:

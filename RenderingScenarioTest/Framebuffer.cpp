@@ -9,6 +9,26 @@ const Framebuffer::Attachment Framebuffer::Attachment::DepthStencil(GL_DEPTH_STE
 Framebuffer::Attachment::Color::Color(unsigned int _attachment) :
 	m_attachment(GL_COLOR_ATTACHMENT0 + _attachment) {}
 
+Framebuffer::DeviceMemory::DeviceMemory(Type _type)
+{
+
+}
+
+Framebuffer::DeviceMemory::~DeviceMemory()
+{
+
+}
+
+void Framebuffer::DeviceMemory::Attach(GLenum _framebufferID)
+{
+
+}
+
+void Framebuffer::DeviceMemory::DumpImage()
+{
+
+}
+
 // GL ERROR CHECK
 int CheckGLError(const char* _file, int _line)
 {
