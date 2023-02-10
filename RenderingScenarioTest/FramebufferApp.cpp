@@ -9,8 +9,22 @@ FramebufferApp::FramebufferApp() :
 	_rectangle(nullptr)
 {
 	_rectangle = new Rectangle(glm::vec2(1, 1));
-	_framebuffer = new Framebuffer(320, 240, 4, 3, true, Framebuffer::BufferType::Renderbuffer);
-	_framebuffer->Initialize();
+
+	_framebuffer = new Framebuffer(320, 240, 4);
+
+	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(0));
+	//_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(1));
+	//_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(2));
+	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::DepthStencil);
+
+	if (_framebuffer->IsComplete())
+	{
+		printf("Frame buffer is ready to use.\n");
+	}
+	else
+	{
+		printf("Not ready.\n");
+	}
 }
 
 FramebufferApp::~FramebufferApp()
@@ -31,7 +45,6 @@ void FramebufferApp::processMouseInput()
 void FramebufferApp::Update()
 {
 	_framebuffer->Bind();
-
 	glClearColor(0.3, 0.3, 0.3, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	Shader* shader = ShaderManager::GetShader("framebuffer");
@@ -43,7 +56,5 @@ void FramebufferApp::Update()
 	_rectangle->Render();
 
 	CHECK_GL_ERROR
-	_framebuffer->DumpBuffer("asdf.ppm");
-
-	CHECK_GL_ERROR
+	_framebuffer->DumpBuffer();
 }
