@@ -64,6 +64,7 @@ public:
 	unsigned int GetId();
 	int GetWidth();
 	int GetHeight();
+	DeviceMemory* GetDeviceMemory(Attachment _attachment);
 
 	void Bind();
 
@@ -74,6 +75,7 @@ public:
 
 	GLuint GenerateBlittedTexture(Attachment _attachment);
 	void DumpAllAttachments(const char* _filePath, bool _formatP6 = true);
+	void DumpTexture(GLuint _textureId, const char* _fileName, bool _formatP6 = true);
 
 private:
 	std::string getDumpedImageName(Attachment _attachment);
@@ -83,5 +85,5 @@ private:
 	int m_sampleCount;
 	unsigned int m_id;
 
-	std::map <Attachment, DeviceMemory*> m_attachments;
+	std::map <Attachment, DeviceMemory*> m_attachedBuffers;
 };

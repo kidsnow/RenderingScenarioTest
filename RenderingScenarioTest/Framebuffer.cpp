@@ -181,9 +181,9 @@ void Framebuffer::Bind()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_id);
 
 	std::vector<GLenum> attachments;
-	for (auto attachmentPair : m_attachments)
+	for (auto attachedBuffer : m_attachedBuffers)
 	{
-		auto attachment = attachmentPair.first;
+		auto attachment = attachedBuffer.first;
 		if (attachment.IsColorAttachment())
 		{
 			attachments.push_back(GLenum(attachment));
@@ -214,7 +214,7 @@ Framebuffer& Framebuffer::AddRenderbuffer(Attachment _attachment)
 	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GLenum(_attachment), GL_RENDERBUFFER, renderbufferId);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-	m_attachments[_attachment] = renderbuffer;
+	m_attachedBuffers[_attachment] = renderbuffer;
 
 	return *this;
 }
@@ -248,44 +248,55 @@ std::string Framebuffer::getDumpedImageName(Attachment _attachment)
 GLuint Framebuffer::GenerateBlittedTexture(Attachment _attachment)
 {
 	GLuint textureId = 0;
-
-	if (_attachment.IsColorAttachment())
 	{
-		auto deviceMemory = m_attachments[_attachment];
-		if (deviceMemory->GetType() == DeviceMemory::MemoryType::Renderbuffer)
+		auto deviceMemory = m_attachedBuffers[_attachment];
+		auto internalFormat = deviceMemory->GetInternalFormat();
+		GLenum textureInternalFormat = GL_NONE;
+		GLenum texturePixelFormat = GL_NONE;
+		GLenum texturePixelDataType = GL_NONE;
+		if (internalFormat == DeviceMemory::InternalFormat::RGBA_Float8)
 		{
-			// generate target texture first.
-			auto internalFormat = deviceMemory->GetInternalFormat();
-			GLenum textureInternalFormat = GL_NONE;
-			GLenum texturePixelFormat = GL_NONE;
-			GLenum texturePixelDataType = GL_NONE;
-			if (internalFormat == DeviceMemory::InternalFormat::RGBA_Float8)
-			{
-				textureInternalFormat = GL_RGBA;
-				texturePixelFormat = GL_RGBA;
-				texturePixelDataType = GL_UNSIGNED_BYTE;
-			}
-
-			glGenTextures(1, &textureId);
-			glBindTexture(GL_TEXTURE_2D, textureId);
-			glTexImage2D(GL_TEXTURE_2D, 0, textureInternalFormat, m_width, m_height, 0, texturePixelFormat, texturePixelDataType, 0);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			// blit from frontBuffer to target texture.
-			GLuint renderbufferId = deviceMemory->GetId();
-			glBindRenderbuffer(GL_RENDERBUFFER, renderbufferId);
-			glBindTexture(GL_TEXTURE_2D, textureId);
-
-			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, m_width, m_height);
-
-			glBindRenderbuffer(GL_RENDERBUFFER, 0);
-			glBindTexture(GL_TEXTURE_2D, 0);
+			textureInternalFormat = GL_RGBA;
+			texturePixelFormat = GL_RGBA;
+			texturePixelDataType = GL_UNSIGNED_BYTE;
 		}
+		glGenTextures(1, &textureId);
+		glBindTexture(GL_TEXTURE_2D, textureId);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
+	CHECK_GL_ERROR;
+
+	GLuint textureFramebufferId = 0;
+	{
+		glGenFramebuffers(1, &textureFramebufferId);
+		glBindFramebuffer(GL_FRAMEBUFFER, textureFramebufferId);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	CHECK_GL_ERROR;
+
+	if (textureFramebufferId == 0)
+	{
+		glDeleteTextures(1, &textureId);
+		return 0;
+	}
+
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_id);
+		glReadBuffer(GLenum(_attachment));
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, textureFramebufferId);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+		glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	}
+	CHECK_GL_ERROR;
+
+	glDeleteFramebuffers(1, &textureFramebufferId);
 
 	return textureId;
 }
@@ -298,10 +309,10 @@ void Framebuffer::DumpAllAttachments(const char* _filePath, bool _formatP6)
 	 * - RGBA_Float8 type의 render buffer
 	 */
 
-	for (auto attachmentPair : m_attachments)
+	for (auto attachedBuffer : m_attachedBuffers)
 	{
-		auto attachment = attachmentPair.first;
-		auto deviceMemory = attachmentPair.second;
+		auto attachment = attachedBuffer.first;
+		auto deviceMemory = attachedBuffer.second;
 
 		if (attachment.IsColorAttachment())
 		{
@@ -309,109 +320,85 @@ void Framebuffer::DumpAllAttachments(const char* _filePath, bool _formatP6)
 			{
 				std::string fileName = std::string(_filePath) + std::string("\\" + getDumpedImageName(attachment) + std::string(".ppm"));
 
-				GLuint textureId;
-				{
-					auto internalFormat = deviceMemory->GetInternalFormat();
-					GLenum textureInternalFormat = GL_NONE;
-					GLenum texturePixelFormat = GL_NONE;
-					GLenum texturePixelDataType = GL_NONE;
-					if (internalFormat == DeviceMemory::InternalFormat::RGBA_Float8)
-					{
-						textureInternalFormat = GL_RGBA;
-						texturePixelFormat = GL_RGBA;
-						texturePixelDataType = GL_UNSIGNED_BYTE;
-					}
-					glGenTextures(1, &textureId);
-					glBindTexture(GL_TEXTURE_2D, textureId);
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-					glBindTexture(GL_TEXTURE_2D, 0);
-				}
-				CHECK_GL_ERROR
-				GLuint textureFramebufferId;
-				{
-					glGenFramebuffers(1, &textureFramebufferId);
-					glBindFramebuffer(GL_FRAMEBUFFER, textureFramebufferId);
-					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
-					glDrawBuffer(GL_COLOR_ATTACHMENT0);
-					glBindFramebuffer(GL_FRAMEBUFFER, 0);
-				}
-				CHECK_GL_ERROR
-				{
-					glBindFramebuffer(GL_READ_FRAMEBUFFER, m_id);
-					glReadBuffer(GLenum(attachment));
-					glBindFramebuffer(GL_DRAW_FRAMEBUFFER, textureFramebufferId);
-					glDrawBuffer(GL_COLOR_ATTACHMENT0);
-					glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				}
-				CHECK_GL_ERROR
-				{
-					unsigned char* pixels = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 4);
-
-					glBindFramebuffer(GL_READ_FRAMEBUFFER, textureFramebufferId);
-					glReadBuffer(GL_COLOR_ATTACHMENT0);
-					// RGB만 필요해도 왠만하면 일단 RGBA로 읽어오는 것이 안전하다... 이상한 구현체.
-					glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-					CHECK_GL_ERROR
-					if (_formatP6)
-					{
-						unsigned char* flipped = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 3);
-						int flippedIdx = 0;
-						for (int i = m_height - 1; i >= 0; i--)
-						{
-							for (int j = 0; j < m_width; j++)
-							{
-								int pixelIdx = (i * m_width + j) * 4;
-								flipped[flippedIdx++] = pixels[pixelIdx];
-								flipped[flippedIdx++] = pixels[pixelIdx + 1];
-								flipped[flippedIdx++] = pixels[pixelIdx + 2];
-							}
-						}
-
-						std::ofstream outfile(fileName, std::ofstream::binary);
-						if (outfile.fail())
-						{
-							free(pixels);
-							free(flipped);
-							return;
-						}
-
-						outfile << "P6\n" << m_width << " " << m_height << "\n" << "255\n";
-						outfile.write(reinterpret_cast<char*>(flipped), m_width * m_height * 3);
-						outfile.close();
-
-						free(flipped);
-					}
-					else
-					{
-						FILE* fp;
-						fp = fopen(fileName.c_str(), "wt");
-						fprintf(fp, "P3\n");
-						fprintf(fp, "%d %d\n", m_width, m_height);
-						fprintf(fp, "255\n");
-
-						for (int i = m_height - 1; i >= 0; i--)
-						{
-							for (int j = 0; j < m_width; j++)
-							{
-								int idx = (i * m_width + j) * 3;
-								fprintf(fp, "%u %u %u ",
-									(unsigned int)pixels[idx],
-									(unsigned int)pixels[idx + 1],
-									(unsigned int)pixels[idx + 2]);
-							}
-						}
-						fclose(fp);
-					}
-
-					free(pixels);
-				}
+				GLuint textureId = GenerateBlittedTexture(attachment);
+				DumpTexture(textureId, fileName.c_str());
 			}
 		}
 	}
 
 	CHECK_GL_ERROR
+}
+
+void Framebuffer::DumpTexture(GLuint _textureId, const char* _fileName, bool _formatP6)
+{
+	GLuint textureFramebufferId = 0;
+	{
+		glGenFramebuffers(1, &textureFramebufferId);
+		glBindFramebuffer(GL_FRAMEBUFFER, textureFramebufferId);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textureId, 0);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	{
+		unsigned char* pixels = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 4);
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, textureFramebufferId);
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+		// RGB만 필요해도 왠만하면 일단 RGBA로 읽어오는 것이 안전하다... 이상한 구현체.
+		glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		CHECK_GL_ERROR
+			if (_formatP6)
+			{
+				unsigned char* flipped = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 3);
+				int flippedIdx = 0;
+				for (int i = m_height - 1; i >= 0; i--)
+				{
+					for (int j = 0; j < m_width; j++)
+					{
+						int pixelIdx = (i * m_width + j) * 4;
+						flipped[flippedIdx++] = pixels[pixelIdx];
+						flipped[flippedIdx++] = pixels[pixelIdx + 1];
+						flipped[flippedIdx++] = pixels[pixelIdx + 2];
+					}
+				}
+
+				std::ofstream outfile(_fileName, std::ofstream::binary);
+				if (outfile.fail())
+				{
+					free(pixels);
+					free(flipped);
+					return;
+				}
+
+				outfile << "P6\n" << m_width << " " << m_height << "\n" << "255\n";
+				outfile.write(reinterpret_cast<char*>(flipped), m_width * m_height * 3);
+				outfile.close();
+
+				free(flipped);
+			}
+			else
+			{
+				FILE* fp;
+				fp = fopen(_fileName, "wt");
+				fprintf(fp, "P3\n");
+				fprintf(fp, "%d %d\n", m_width, m_height);
+				fprintf(fp, "255\n");
+
+				for (int i = m_height - 1; i >= 0; i--)
+				{
+					for (int j = 0; j < m_width; j++)
+					{
+						int idx = (i * m_width + j) * 3;
+						fprintf(fp, "%u %u %u ",
+							(unsigned int)pixels[idx],
+							(unsigned int)pixels[idx + 1],
+							(unsigned int)pixels[idx + 2]);
+					}
+				}
+				fclose(fp);
+			}
+
+		free(pixels);
+	}
 }
