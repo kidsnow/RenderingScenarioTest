@@ -1,6 +1,8 @@
-#include "Framebuffer.h"
+ï»¿#include "Framebuffer.h"
 
 #include "GL/glew.h"
+
+#include <vector>
 #include <fstream>
 
 #include "DeviceMemory.h"
@@ -68,7 +70,7 @@ int CheckGLError(const char* _file, int _line)
 {
 	int    retCode = 0;
 
-#if !defined(NDEBUG) || defined(_DEBUG) // define ¾ø¾ÖÁö ¸»°Í (¸±¸®Áî¿¡¼­´Â ±×¸±¶§¸¶´Ù glErrorÃ¼Å©ÇÏ¸é ¼ÓµµÀúÇÏ»ı±è)
+#if !defined(NDEBUG) || defined(_DEBUG) // define ì—†ì• ì§€ ë§ê²ƒ (ë¦´ë¦¬ì¦ˆì—ì„œëŠ” ê·¸ë¦´ë•Œë§ˆë‹¤ glErrorì²´í¬í•˜ë©´ ì†ë„ì €í•˜ìƒê¹€)
 	GLenum glErr;
 	glErr = glGetError();
 	while (glErr != GL_NO_ERROR)
@@ -177,6 +179,18 @@ int Framebuffer::GetHeight()
 void Framebuffer::Bind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+
+	std::vector<GLenum> attachments;
+	for (auto attachmentPair : m_attachments)
+	{
+		auto attachment = attachmentPair.first;
+		if (attachment.IsColorAttachment())
+		{
+			attachments.push_back(GLenum(attachment));
+		}
+	}
+
+	glDrawBuffers(attachments.size(), attachments.data());
 	glViewport(0, 0, m_width, m_height);
 }
 
@@ -218,21 +232,83 @@ bool Framebuffer::IsComplete()
 	return true;
 }
 
-void Framebuffer::DumpBuffer(const char* _filePath, bool _formatP6)
+std::string Framebuffer::getDumpedImageName(Attachment _attachment)
+{
+	if (_attachment.IsColorAttachment())
+	{
+		int index = GLenum(_attachment) - GL_COLOR_ATTACHMENT0;
+		return "ColorAttachment" + std::to_string(index);
+	}
+	else if (_attachment == Attachment::DepthStencil)
+	{
+		return "DepthStencil";
+	}
+}
+
+GLuint Framebuffer::GenerateBlittedTexture(Attachment _attachment)
+{
+	GLuint textureId = 0;
+
+	if (_attachment.IsColorAttachment())
+	{
+		auto deviceMemory = m_attachments[_attachment];
+		if (deviceMemory->GetType() == DeviceMemory::MemoryType::Renderbuffer)
+		{
+			// generate target texture first.
+			auto internalFormat = deviceMemory->GetInternalFormat();
+			GLenum textureInternalFormat = GL_NONE;
+			GLenum texturePixelFormat = GL_NONE;
+			GLenum texturePixelDataType = GL_NONE;
+			if (internalFormat == DeviceMemory::InternalFormat::RGBA_Float8)
+			{
+				textureInternalFormat = GL_RGBA;
+				texturePixelFormat = GL_RGBA;
+				texturePixelDataType = GL_UNSIGNED_BYTE;
+			}
+
+			glGenTextures(1, &textureId);
+			glBindTexture(GL_TEXTURE_2D, textureId);
+			glTexImage2D(GL_TEXTURE_2D, 0, textureInternalFormat, m_width, m_height, 0, texturePixelFormat, texturePixelDataType, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			// blit from frontBuffer to target texture.
+			GLuint renderbufferId = deviceMemory->GetId();
+			glBindRenderbuffer(GL_RENDERBUFFER, renderbufferId);
+			glBindTexture(GL_TEXTURE_2D, textureId);
+
+			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, m_width, m_height);
+
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+	}
+
+	return textureId;
+}
+
+void Framebuffer::DumpAllAttachments(const char* _filePath, bool _formatP6)
 {
 	/*
-	 * ÀÏ´ÜÀº dump °¡´ÉÇÑ attachmentÀÇ typeÀº ´ÙÀ½°ú °°´Ù :
+	 * ì¼ë‹¨ì€ dump ê°€ëŠ¥í•œ attachmentì˜ typeì€ ë‹¤ìŒê³¼ ê°™ë‹¤ :
 	 * - color attachment
-	 * - RGBA_Float8 typeÀÇ render buffer
+	 * - RGBA_Float8 typeì˜ render buffer
 	 */
+
 	for (auto attachmentPair : m_attachments)
 	{
 		auto attachment = attachmentPair.first;
 		auto deviceMemory = attachmentPair.second;
+
 		if (attachment.IsColorAttachment())
 		{
 			if (deviceMemory->GetType() == DeviceMemory::MemoryType::Renderbuffer)
 			{
+				std::string fileName = std::string(_filePath) + std::string("\\" + getDumpedImageName(attachment) + std::string(".ppm"));
+
 				GLuint textureId;
 				{
 					auto internalFormat = deviceMemory->GetInternalFormat();
@@ -277,7 +353,7 @@ void Framebuffer::DumpBuffer(const char* _filePath, bool _formatP6)
 
 					glBindFramebuffer(GL_READ_FRAMEBUFFER, textureFramebufferId);
 					glReadBuffer(GL_COLOR_ATTACHMENT0);
-					// RGB¸¸ ÇÊ¿äÇØµµ ¿Ø¸¸ÇÏ¸é ÀÏ´Ü RGBA·Î ÀĞ¾î¿À´Â °ÍÀÌ ¾ÈÀüÇÏ´Ù... ÀÌ»óÇÑ ±¸ÇöÃ¼.
+					// RGBë§Œ í•„ìš”í•´ë„ ì™ ë§Œí•˜ë©´ ì¼ë‹¨ RGBAë¡œ ì½ì–´ì˜¤ëŠ” ê²ƒì´ ì•ˆì „í•˜ë‹¤... ì´ìƒí•œ êµ¬í˜„ì²´.
 					glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 					CHECK_GL_ERROR
 					if (_formatP6)
@@ -295,7 +371,7 @@ void Framebuffer::DumpBuffer(const char* _filePath, bool _formatP6)
 							}
 						}
 
-						std::ofstream outfile("FrontBufferP6.ppm", std::ofstream::binary);
+						std::ofstream outfile(fileName, std::ofstream::binary);
 						if (outfile.fail())
 						{
 							free(pixels);
@@ -312,7 +388,7 @@ void Framebuffer::DumpBuffer(const char* _filePath, bool _formatP6)
 					else
 					{
 						FILE* fp;
-						fp = fopen("FrontBufferP3.ppm", "wt");
+						fp = fopen(fileName.c_str(), "wt");
 						fprintf(fp, "P3\n");
 						fprintf(fp, "%d %d\n", m_width, m_height);
 						fprintf(fp, "255\n");

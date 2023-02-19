@@ -13,10 +13,10 @@ FramebufferApp::FramebufferApp() :
 	_framebuffer = new Framebuffer(320, 240, 4);
 
 	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(0));
-	//_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(1));
-	//_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(2));
+	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(1));
+	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(2));
 	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::DepthStencil);
-
+	
 	if (_framebuffer->IsComplete())
 	{
 		printf("Frame buffer is ready to use.\n");
@@ -46,6 +46,7 @@ void FramebufferApp::Update()
 {
 	_framebuffer->Bind();
 	glClearColor(0.3, 0.3, 0.3, 1.0);
+	CHECK_GL_ERROR
 	glClear(GL_COLOR_BUFFER_BIT);
 	Shader* shader = ShaderManager::GetShader("framebuffer");
 
@@ -56,5 +57,5 @@ void FramebufferApp::Update()
 	_rectangle->Render();
 
 	CHECK_GL_ERROR
-	_framebuffer->DumpBuffer();
+	_framebuffer->DumpBuffer("C:\\Zpac\\DumpedBuffer");
 }
