@@ -247,9 +247,22 @@ std::string Framebuffer::getDumpedImageName(Attachment _attachment)
 
 GLuint Framebuffer::GenerateBlittedTexture(Attachment _attachment)
 {
+	auto deviceMemory = m_attachedBuffers[_attachment];
+
+	bool supportedFormat = false;
+	if (_attachment.IsColorAttachment())
+	{
+		if (deviceMemory->GetType() == DeviceMemory::MemoryType::Renderbuffer)
+		{
+			supportedFormat = true;
+		}
+	}
+
+	if (supportedFormat == false)
+		return 0;
+
 	GLuint textureId = 0;
 	{
-		auto deviceMemory = m_attachedBuffers[_attachment];
 		auto internalFormat = deviceMemory->GetInternalFormat();
 		GLenum textureInternalFormat = GL_NONE;
 		GLenum texturePixelFormat = GL_NONE;
@@ -303,30 +316,20 @@ GLuint Framebuffer::GenerateBlittedTexture(Attachment _attachment)
 
 void Framebuffer::DumpAllAttachments(const char* _filePath, bool _formatP6)
 {
-	/*
-	 * 일단은 dump 가능한 attachment의 type은 다음과 같다 :
-	 * - color attachment
-	 * - RGBA_Float8 type의 render buffer
-	 */
-
 	for (auto attachedBuffer : m_attachedBuffers)
 	{
 		auto attachment = attachedBuffer.first;
-		auto deviceMemory = attachedBuffer.second;
 
-		if (attachment.IsColorAttachment())
-		{
-			if (deviceMemory->GetType() == DeviceMemory::MemoryType::Renderbuffer)
-			{
-				std::string fileName = std::string(_filePath) + std::string("\\" + getDumpedImageName(attachment) + std::string(".ppm"));
+		GLuint textureId = GenerateBlittedTexture(attachment);
 
-				GLuint textureId = GenerateBlittedTexture(attachment);
-				DumpTexture(textureId, fileName.c_str());
-			}
-		}
+		if (textureId == 0)
+			continue;
+
+		std::string fileName = std::string(_filePath) + std::string("\\" + getDumpedImageName(attachment) + std::string(".ppm"));
+		DumpTexture(textureId, fileName.c_str());
 	}
 
-	CHECK_GL_ERROR
+	CHECK_GL_ERROR;
 }
 
 void Framebuffer::DumpTexture(GLuint _textureId, const char* _fileName, bool _formatP6)
@@ -347,57 +350,57 @@ void Framebuffer::DumpTexture(GLuint _textureId, const char* _fileName, bool _fo
 		glReadBuffer(GL_COLOR_ATTACHMENT0);
 		// RGB만 필요해도 왠만하면 일단 RGBA로 읽어오는 것이 안전하다... 이상한 구현체.
 		glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-		CHECK_GL_ERROR
-			if (_formatP6)
+		CHECK_GL_ERROR;
+		if (_formatP6)
+		{
+			unsigned char* flipped = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 3);
+			int flippedIdx = 0;
+			for (int i = m_height - 1; i >= 0; i--)
 			{
-				unsigned char* flipped = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 3);
-				int flippedIdx = 0;
-				for (int i = m_height - 1; i >= 0; i--)
+				for (int j = 0; j < m_width; j++)
 				{
-					for (int j = 0; j < m_width; j++)
-					{
-						int pixelIdx = (i * m_width + j) * 4;
-						flipped[flippedIdx++] = pixels[pixelIdx];
-						flipped[flippedIdx++] = pixels[pixelIdx + 1];
-						flipped[flippedIdx++] = pixels[pixelIdx + 2];
-					}
+					int pixelIdx = (i * m_width + j) * 4;
+					flipped[flippedIdx++] = pixels[pixelIdx];
+					flipped[flippedIdx++] = pixels[pixelIdx + 1];
+					flipped[flippedIdx++] = pixels[pixelIdx + 2];
 				}
+			}
 
-				std::ofstream outfile(_fileName, std::ofstream::binary);
-				if (outfile.fail())
-				{
-					free(pixels);
-					free(flipped);
-					return;
-				}
-
-				outfile << "P6\n" << m_width << " " << m_height << "\n" << "255\n";
-				outfile.write(reinterpret_cast<char*>(flipped), m_width * m_height * 3);
-				outfile.close();
-
+			std::ofstream outfile(_fileName, std::ofstream::binary);
+			if (outfile.fail())
+			{
+				free(pixels);
 				free(flipped);
+				return;
 			}
-			else
-			{
-				FILE* fp;
-				fp = fopen(_fileName, "wt");
-				fprintf(fp, "P3\n");
-				fprintf(fp, "%d %d\n", m_width, m_height);
-				fprintf(fp, "255\n");
 
-				for (int i = m_height - 1; i >= 0; i--)
+			outfile << "P6\n" << m_width << " " << m_height << "\n" << "255\n";
+			outfile.write(reinterpret_cast<char*>(flipped), m_width * m_height * 3);
+			outfile.close();
+
+			free(flipped);
+		}
+		else
+		{
+			FILE* fp;
+			fp = fopen(_fileName, "wt");
+			fprintf(fp, "P3\n");
+			fprintf(fp, "%d %d\n", m_width, m_height);
+			fprintf(fp, "255\n");
+
+			for (int i = m_height - 1; i >= 0; i--)
+			{
+				for (int j = 0; j < m_width; j++)
 				{
-					for (int j = 0; j < m_width; j++)
-					{
-						int idx = (i * m_width + j) * 3;
-						fprintf(fp, "%u %u %u ",
-							(unsigned int)pixels[idx],
-							(unsigned int)pixels[idx + 1],
-							(unsigned int)pixels[idx + 2]);
-					}
+					int idx = (i * m_width + j) * 3;
+					fprintf(fp, "%u %u %u ",
+						(unsigned int)pixels[idx],
+						(unsigned int)pixels[idx + 1],
+						(unsigned int)pixels[idx + 2]);
 				}
-				fclose(fp);
 			}
+			fclose(fp);
+		}
 
 		free(pixels);
 	}
