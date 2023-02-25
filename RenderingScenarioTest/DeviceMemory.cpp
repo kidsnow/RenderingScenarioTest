@@ -48,8 +48,34 @@ DeviceMemory* DeviceMemory::GenRenderbuffer(int _width, int _height, int _sample
 	return deviceMemory;
 }
 
-DeviceMemory* DeviceMemory::GenTexture()
+DeviceMemory* DeviceMemory::GenTexture(int _width, int _height, InternalFormat _internalFormat)
 {
+	GLenum textureInternalFormat = GL_NONE;
+	GLenum texturePixelFormat = GL_NONE;
+	GLenum texturePixelDataType = GL_NONE;
+
+	if (_internalFormat == DeviceMemory::InternalFormat::RGBA_Float8)
+	{
+		textureInternalFormat = GLenum(_internalFormat);
+		texturePixelFormat = GL_RGBA;
+		texturePixelDataType = GL_UNSIGNED_BYTE;
+	}
+	else
+	{
+		// Not supported.
+		return nullptr;
+	}
+
+	GLuint bufferId = 0;
+	glGenTextures(1, &bufferId);
+	glBindTexture(GL_TEXTURE_2D, bufferId);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	return nullptr;
 }
 

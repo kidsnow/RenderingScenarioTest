@@ -221,6 +221,21 @@ Framebuffer& Framebuffer::AddRenderbuffer(Attachment _attachment)
 
 Framebuffer& Framebuffer::AddTexture(Attachment _attachment)
 {
+	if (_attachment.IsColorAttachment() == false)
+		return *this;
+
+	DeviceMemory::InternalFormat internalFormat = DeviceMemory::InternalFormat::RGBA_Float8;
+
+	auto texture = DeviceMemory::GenTexture(m_width, m_height, internalFormat);
+
+	auto textureId = texture->GetId();
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_id);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GLenum(_attachment), GL_TEXTURE_2D, textureId, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	m_attachedBuffers[_attachment] = texture;
+
 	return *this;
 }
 
