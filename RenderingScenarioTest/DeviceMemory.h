@@ -32,12 +32,12 @@ public:
 	};
 
 public:
+	~DeviceMemory();
 	static DeviceMemory* GenRenderbuffer(int _width, int _height, int _sampleCount, InternalFormat _format);
 	static DeviceMemory* GenTexture(int _width, int _height, InternalFormat _internalFormat);
 
 private:
 	DeviceMemory(MemoryType _memoryType, InternalFormat _internalFormat, GLuint _id);
-	~DeviceMemory();
 
 public:
 	MemoryType GetType();

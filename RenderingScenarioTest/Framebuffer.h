@@ -64,12 +64,13 @@ public:
 	unsigned int GetId();
 	int GetWidth();
 	int GetHeight();
-	DeviceMemory* GetDeviceMemory(Attachment _attachment);
 
 	void Bind();
 
-	Framebuffer& AddRenderbuffer(Attachment _attachment);
-	Framebuffer& AddTexture(Attachment _attachment);
+	void AddRenderbuffer(Attachment _attachment);
+	void AddTexture(Attachment _attachment);
+	void AttachRenderbuffer(DeviceMemory* _renderbuffer, Attachment _attachment);
+	void AttachTexture(DeviceMemory* _texture, Attachment _attachment);
 
 	bool IsComplete();
 

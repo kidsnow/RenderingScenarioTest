@@ -23,6 +23,14 @@ DeviceMemory::DeviceMemory(MemoryType _memoryType, InternalFormat _internalForma
 	m_internalFormat(_internalFormat),
 	m_bufferId(_id)
 {
+	if (m_type == MemoryType::Renderbuffer)
+	{
+		glDeleteRenderbuffers(1, &m_bufferId);
+	}
+	else if (m_type == MemoryType::Texture)
+	{
+		glDeleteTextures(1, &m_bufferId);
+	}
 }
 
 DeviceMemory::~DeviceMemory()
@@ -31,8 +39,6 @@ DeviceMemory::~DeviceMemory()
 
 DeviceMemory* DeviceMemory::GenRenderbuffer(int _width, int _height, int _sampleCount, InternalFormat _internalFormat)
 {
-	// FlushGLError«œ∞Ì
-
 	GLenum internalFormat = GLenum(_internalFormat);
 
 	GLuint bufferId = 0;

@@ -159,6 +159,12 @@ Framebuffer::~Framebuffer()
 		glDeleteFramebuffers(1, (GLuint*)&m_id);
 		m_id = 0;
 	}
+
+	for (auto attachedBuffer : m_attachedBuffers)
+	{
+		auto deviceMemory = attachedBuffer.second;
+		delete deviceMemory;
+	}
 }
 
 unsigned int Framebuffer::GetId()
@@ -194,7 +200,7 @@ void Framebuffer::Bind()
 	glViewport(0, 0, m_width, m_height);
 }
 
-Framebuffer& Framebuffer::AddRenderbuffer(Attachment _attachment)
+void Framebuffer::AddRenderbuffer(Attachment _attachment)
 {
 	DeviceMemory::InternalFormat internalFormat = DeviceMemory::InternalFormat::RGBA_Float8;
 	if (_attachment == Attachment::DepthStencil)
@@ -205,38 +211,58 @@ Framebuffer& Framebuffer::AddRenderbuffer(Attachment _attachment)
 	auto renderbuffer = DeviceMemory::GenRenderbuffer(m_width, m_height, m_sampleCount, internalFormat);
 
 	if (renderbuffer == nullptr)
-		return *this;
+		return;
 
-	auto renderbufferId = renderbuffer->GetId();
+	AttachRenderbuffer(renderbuffer, _attachment);
+
+	return;
+}
+
+void Framebuffer::AddTexture(Attachment _attachment)
+{
+	if (_attachment.IsColorAttachment() == false)
+		return;
+
+	DeviceMemory::InternalFormat internalFormat = DeviceMemory::InternalFormat::RGBA_Float8;
+
+	auto texture = DeviceMemory::GenTexture(m_width, m_height, internalFormat);
+
+	AttachTexture(texture, _attachment);
+
+	return;
+}
+
+void Framebuffer::AttachRenderbuffer(DeviceMemory* _renderbuffer, Attachment _attachment)
+{
+	if (_renderbuffer->GetType() != DeviceMemory::MemoryType::Renderbuffer)
+		return;
+
+	auto renderbufferId = _renderbuffer->GetId();
 
 	// Attach renderbuffer to framebuffer
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_id);
 	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GLenum(_attachment), GL_RENDERBUFFER, renderbufferId);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-	m_attachedBuffers[_attachment] = renderbuffer;
+	m_attachedBuffers[_attachment] = _renderbuffer;
 
-	return *this;
+	return;
 }
 
-Framebuffer& Framebuffer::AddTexture(Attachment _attachment)
+void Framebuffer::AttachTexture(DeviceMemory* _texture, Attachment _attachment)
 {
-	if (_attachment.IsColorAttachment() == false)
-		return *this;
+	if (_texture->GetType() != DeviceMemory::MemoryType::Texture)
+		return;
 
-	DeviceMemory::InternalFormat internalFormat = DeviceMemory::InternalFormat::RGBA_Float8;
-
-	auto texture = DeviceMemory::GenTexture(m_width, m_height, internalFormat);
-
-	auto textureId = texture->GetId();
+	auto textureId = _texture->GetId();
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_id);
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GLenum(_attachment), GL_TEXTURE_2D, textureId, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-	m_attachedBuffers[_attachment] = texture;
+	m_attachedBuffers[_attachment] = _texture;
 
-	return *this;
+	return;
 }
 
 bool Framebuffer::IsComplete()
