@@ -213,6 +213,8 @@ void Framebuffer::AddRenderbuffer(Attachment _attachment)
 	if (renderbuffer == nullptr)
 		return;
 
+	renderbuffer->SetManaged(true);
+
 	AttachRenderbuffer(renderbuffer, _attachment);
 
 	return;
@@ -226,6 +228,11 @@ void Framebuffer::AddTexture(Attachment _attachment)
 	DeviceMemory::InternalFormat internalFormat = DeviceMemory::InternalFormat::RGBA_Float8;
 
 	auto texture = DeviceMemory::GenTexture(m_width, m_height, internalFormat);
+
+	if (texture == nullptr)
+		return;
+
+	texture->SetManaged(true);
 
 	AttachTexture(texture, _attachment);
 

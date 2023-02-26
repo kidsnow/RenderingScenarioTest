@@ -31,20 +31,23 @@ public:
 		GLenum m_enum;
 	};
 
+private:
+	DeviceMemory(MemoryType _memoryType, InternalFormat _internalFormat, GLuint _id);
+
 public:
 	~DeviceMemory();
 	static DeviceMemory* GenRenderbuffer(int _width, int _height, int _sampleCount, InternalFormat _format);
 	static DeviceMemory* GenTexture(int _width, int _height, InternalFormat _internalFormat);
 
-private:
-	DeviceMemory(MemoryType _memoryType, InternalFormat _internalFormat, GLuint _id);
-
 public:
+	void SetManaged(bool _managed);
+	bool IsManaged();
 	MemoryType GetType();
 	InternalFormat GetInternalFormat();
 	GLuint GetId();
 
 private:
+	bool m_managed; // managed by rendersystem. no need to manually free memory.
 	MemoryType m_type;
 	InternalFormat m_internalFormat;
 	GLuint m_bufferId;

@@ -19,9 +19,14 @@ bool DeviceMemory::InternalFormat::operator==(const InternalFormat& _internalFor
 }
 
 DeviceMemory::DeviceMemory(MemoryType _memoryType, InternalFormat _internalFormat, GLuint _id) :
+	m_managed(false),
 	m_type(_memoryType),
 	m_internalFormat(_internalFormat),
 	m_bufferId(_id)
+{
+}
+
+DeviceMemory::~DeviceMemory()
 {
 	if (m_type == MemoryType::Renderbuffer)
 	{
@@ -31,10 +36,6 @@ DeviceMemory::DeviceMemory(MemoryType _memoryType, InternalFormat _internalForma
 	{
 		glDeleteTextures(1, &m_bufferId);
 	}
-}
-
-DeviceMemory::~DeviceMemory()
-{
 }
 
 DeviceMemory* DeviceMemory::GenRenderbuffer(int _width, int _height, int _sampleCount, InternalFormat _internalFormat)
@@ -83,6 +84,16 @@ DeviceMemory* DeviceMemory::GenTexture(int _width, int _height, InternalFormat _
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return nullptr;
+}
+
+void DeviceMemory::SetManaged(bool _managed)
+{
+	m_managed = _managed;
+}
+
+bool DeviceMemory::IsManaged()
+{
+	return m_managed;
 }
 
 DeviceMemory::MemoryType DeviceMemory::GetType()
