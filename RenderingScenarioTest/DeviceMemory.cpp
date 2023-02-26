@@ -83,7 +83,10 @@ DeviceMemory* DeviceMemory::GenTexture(int _width, int _height, InternalFormat _
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	return nullptr;
+	DeviceMemory* deviceMemory = nullptr;
+	deviceMemory = new DeviceMemory(MemoryType::Texture, _internalFormat, bufferId);
+
+	return deviceMemory;
 }
 
 void DeviceMemory::SetManaged(bool _managed)

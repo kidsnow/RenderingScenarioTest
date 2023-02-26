@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <map>
+#include <vector>
 #include <string>
 
 /*
@@ -72,13 +73,15 @@ public:
 	void AttachRenderbuffer(DeviceMemory* _renderbuffer, Attachment _attachment);
 	void AttachTexture(DeviceMemory* _texture, Attachment _attachment);
 
+	void RegisterManagedBuffer(DeviceMemory* _deviceMemory);
+
 	bool IsComplete();
 
-	GLuint GenerateBlittedTexture(Attachment _attachment);
+	DeviceMemory* GenerateBlittedTexture(Attachment _attachment);
 	void DumpAllAttachments(const char* _filePath, bool _formatP6 = true);
-	void DumpTexture(GLuint _textureId, const char* _fileName, bool _formatP6 = true);
 
 private:
+	void dumpTexture(DeviceMemory* _texture, const char* _fileName, bool _formatP6 = true);
 	std::string getDumpedImageName(Attachment _attachment);
 
 private:
@@ -87,4 +90,5 @@ private:
 	unsigned int m_id;
 
 	std::map <Attachment, DeviceMemory*> m_attachedBuffers;
+	std::vector<DeviceMemory*> m_managedBuffers;
 };

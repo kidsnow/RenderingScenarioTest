@@ -163,7 +163,9 @@ Framebuffer::~Framebuffer()
 	for (auto attachedBuffer : m_attachedBuffers)
 	{
 		auto deviceMemory = attachedBuffer.second;
-		delete deviceMemory;
+
+		if (deviceMemory->IsManaged())
+			delete deviceMemory;
 	}
 }
 
@@ -213,7 +215,7 @@ void Framebuffer::AddRenderbuffer(Attachment _attachment)
 	if (renderbuffer == nullptr)
 		return;
 
-	renderbuffer->SetManaged(true);
+	RegisterManagedBuffer(renderbuffer);
 
 	AttachRenderbuffer(renderbuffer, _attachment);
 
@@ -232,7 +234,7 @@ void Framebuffer::AddTexture(Attachment _attachment)
 	if (texture == nullptr)
 		return;
 
-	texture->SetManaged(true);
+	RegisterManagedBuffer(texture);
 
 	AttachTexture(texture, _attachment);
 
@@ -272,6 +274,12 @@ void Framebuffer::AttachTexture(DeviceMemory* _texture, Attachment _attachment)
 	return;
 }
 
+void Framebuffer::RegisterManagedBuffer(DeviceMemory* _deviceMemory)
+{
+	m_managedBuffers.push_back(_deviceMemory);
+	_deviceMemory->SetManaged(true);
+}
+
 bool Framebuffer::IsComplete()
 {
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -293,7 +301,7 @@ std::string Framebuffer::getDumpedImageName(Attachment _attachment)
 	}
 }
 
-GLuint Framebuffer::GenerateBlittedTexture(Attachment _attachment)
+DeviceMemory* Framebuffer::GenerateBlittedTexture(Attachment _attachment)
 {
 	auto deviceMemory = m_attachedBuffers[_attachment];
 
@@ -307,59 +315,25 @@ GLuint Framebuffer::GenerateBlittedTexture(Attachment _attachment)
 	}
 
 	if (supportedFormat == false)
-		return 0;
+		return nullptr;
 
-	GLuint textureId = 0;
-	{
-		auto internalFormat = deviceMemory->GetInternalFormat();
-		GLenum textureInternalFormat = GL_NONE;
-		GLenum texturePixelFormat = GL_NONE;
-		GLenum texturePixelDataType = GL_NONE;
-		if (internalFormat == DeviceMemory::InternalFormat::RGBA_Float8)
-		{
-			textureInternalFormat = GL_RGBA;
-			texturePixelFormat = GL_RGBA;
-			texturePixelDataType = GL_UNSIGNED_BYTE;
-		}
-		glGenTextures(1, &textureId);
-		glBindTexture(GL_TEXTURE_2D, textureId);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-	CHECK_GL_ERROR;
+	auto texture = DeviceMemory::GenTexture(m_width, m_height, deviceMemory->GetInternalFormat());
+	
+	if (texture == nullptr)
+		return nullptr;
 
-	GLuint textureFramebufferId = 0;
-	{
-		glGenFramebuffers(1, &textureFramebufferId);
-		glBindFramebuffer(GL_FRAMEBUFFER, textureFramebufferId);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-	CHECK_GL_ERROR;
+	auto textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount);
+	textureFramebuffer->AttachTexture(texture, Attachment::Color(0));
 
-	if (textureFramebufferId == 0)
-	{
-		glDeleteTextures(1, &textureId);
-		return 0;
-	}
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_id);
+	glReadBuffer(GLenum(_attachment));
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, textureFramebuffer->GetId());
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_id);
-		glReadBuffer(GLenum(_attachment));
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, textureFramebufferId);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
-		glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-	}
-	CHECK_GL_ERROR;
+	delete textureFramebuffer;
 
-	glDeleteFramebuffers(1, &textureFramebufferId);
-
-	return textureId;
+	return texture;
 }
 
 void Framebuffer::DumpAllAttachments(const char* _filePath, bool _formatP6)
@@ -368,33 +342,29 @@ void Framebuffer::DumpAllAttachments(const char* _filePath, bool _formatP6)
 	{
 		auto attachment = attachedBuffer.first;
 
-		GLuint textureId = GenerateBlittedTexture(attachment);
+		auto texture = GenerateBlittedTexture(attachment);
 
-		if (textureId == 0)
+		if (texture == nullptr)
 			continue;
 
 		std::string fileName = std::string(_filePath) + std::string("\\" + getDumpedImageName(attachment) + std::string(".ppm"));
-		DumpTexture(textureId, fileName.c_str());
+		dumpTexture(texture, fileName.c_str());
+
+		delete texture;
 	}
 
 	CHECK_GL_ERROR;
 }
 
-void Framebuffer::DumpTexture(GLuint _textureId, const char* _fileName, bool _formatP6)
+void Framebuffer::dumpTexture(DeviceMemory* _texture, const char* _fileName, bool _formatP6)
 {
-	GLuint textureFramebufferId = 0;
-	{
-		glGenFramebuffers(1, &textureFramebufferId);
-		glBindFramebuffer(GL_FRAMEBUFFER, textureFramebufferId);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textureId, 0);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
+	auto textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount);
+	textureFramebuffer->AttachTexture(_texture, Attachment::Color(0));
 
 	{
 		unsigned char* pixels = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 4);
 
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, textureFramebufferId);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, textureFramebuffer->GetId());
 		glReadBuffer(GL_COLOR_ATTACHMENT0);
 		// RGB만 필요해도 왠만하면 일단 RGBA로 읽어오는 것이 안전하다... 이상한 구현체.
 		glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
@@ -452,4 +422,6 @@ void Framebuffer::DumpTexture(GLuint _textureId, const char* _fileName, bool _fo
 
 		free(pixels);
 	}
+
+	delete textureFramebuffer;
 }
