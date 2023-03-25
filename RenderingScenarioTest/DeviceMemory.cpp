@@ -1,7 +1,9 @@
 #include "DeviceMemory.h"
 
 #include "GL/glew.h"
+#include "GLHelper.h"
 
+const DeviceMemory::InternalFormat DeviceMemory::InternalFormat::R_Float32(GL_R32F);
 const DeviceMemory::InternalFormat DeviceMemory::InternalFormat::RGBA_Float8(GL_RGBA8);
 const DeviceMemory::InternalFormat DeviceMemory::InternalFormat::RGBA_Float32(GL_RGBA32F);
 const DeviceMemory::InternalFormat DeviceMemory::InternalFormat::Depth_Float24_Stencil_Int8(GL_DEPTH24_STENCIL8);
@@ -16,6 +18,11 @@ DeviceMemory::InternalFormat::operator GLenum() const
 bool DeviceMemory::InternalFormat::operator==(const InternalFormat& _internalFormat) const
 {
 	return GLenum(*this) == GLenum(_internalFormat);
+}
+
+bool DeviceMemory::InternalFormat::operator!=(const InternalFormat& _internalFormat) const
+{
+	return GLenum(*this) != GLenum(_internalFormat);
 }
 
 DeviceMemory::DeviceMemory(MemoryType _memoryType, InternalFormat _internalFormat, GLuint _id) :
@@ -51,7 +58,10 @@ DeviceMemory* DeviceMemory::GenRenderbuffer(int _width, int _height, int _sample
 	DeviceMemory* deviceMemory = nullptr;
 	deviceMemory = new DeviceMemory(MemoryType::Renderbuffer, _internalFormat, bufferId);
 
-	// CHECK_GL_ERROR해서 문제되면 nullptr 반환.
+	auto asdf = CHECK_GL_ERROR;
+	if (asdf != 0)
+		return nullptr;
+
 	return deviceMemory;
 }
 
@@ -67,6 +77,12 @@ DeviceMemory* DeviceMemory::GenTexture(int _width, int _height, InternalFormat _
 		texturePixelFormat = GL_RGBA;
 		texturePixelDataType = GL_UNSIGNED_BYTE;
 	}
+	else if (_internalFormat == DeviceMemory::InternalFormat::R_Float32)
+	{
+		textureInternalFormat = GLenum(_internalFormat);
+		texturePixelFormat = GL_RED;
+		texturePixelDataType = GL_FLOAT;
+	}
 	else
 	{
 		// Not supported.
@@ -76,7 +92,7 @@ DeviceMemory* DeviceMemory::GenTexture(int _width, int _height, InternalFormat _
 	GLuint bufferId = 0;
 	glGenTextures(1, &bufferId);
 	glBindTexture(GL_TEXTURE_2D, bufferId);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, textureInternalFormat, _width, _height, 0, texturePixelFormat, texturePixelDataType, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

@@ -6,58 +6,61 @@
 #include <fstream>
 
 #include "DeviceMemory.h"
+#include "GLHelper.h"
 
-//const Framebuffer::Attachment Framebuffer::Attachment::Depth(GL_DEPTH_ATTACHMENT);
-//const Framebuffer::Attachment Framebuffer::Attachment::Stencil(GL_STENCIL_ATTACHMENT);
-const Framebuffer::Attachment Framebuffer::Attachment::DepthStencil(GL_DEPTH_STENCIL_ATTACHMENT);
-Framebuffer::Attachment::Color::Color(unsigned int _attachment) :
-	m_attachment(GL_COLOR_ATTACHMENT0 + _attachment) {}
-Framebuffer::Attachment::Color::~Color() {}
+//const Attachment Attachment::Depth(GL_DEPTH_ATTACHMENT);
+//const Attachment Attachment::Stencil(GL_STENCIL_ATTACHMENT);
+const Attachment Attachment::DepthStencil(GL_DEPTH_STENCIL_ATTACHMENT);
+Attachment::Color::Color(unsigned int _index) :
+	m_index(_index) {}
+Attachment::Color::~Color() {}
 
-Framebuffer::Attachment::Color::operator GLenum() const
+Attachment::Color::operator GLenum() const
 {
-	return m_attachment;
+	return GL_COLOR_ATTACHMENT0 + m_index;
 }
 
-Framebuffer::Attachment::Attachment(Color _color) :
+Attachment::Attachment(Color _color) :
 	m_attachment(GLenum(_color))
 {
 
 }
 
-Framebuffer::Attachment::Attachment(GLenum _attachment) :
+Attachment::Attachment(GLenum _attachment) :
 	m_attachment(_attachment)
 {
 
 }
 
-Framebuffer::Attachment::operator GLenum() const
+Attachment::operator GLenum() const
 {
 	return m_attachment;
 }
 
-bool Framebuffer::Attachment::operator==(const Attachment& _attachment) const
+bool Attachment::operator==(const Attachment& _attachment) const
 {
 	return GLenum(*this) == GLenum(_attachment);
 }
 
-bool Framebuffer::Attachment::operator<(const Attachment& _attachment) const
+bool Attachment::operator<(const Attachment& _attachment) const
 {
 	return this->m_attachment < _attachment.m_attachment;
 }
 
-bool Framebuffer::Attachment::operator>(const Attachment& _attachment) const
+bool Attachment::operator>(const Attachment& _attachment) const
 {
 	return this->m_attachment > _attachment.m_attachment;
 }
 
-bool Framebuffer::Attachment::IsColorAttachment() const
+bool Attachment::IsColorAttachment() const
 {
 	int maxColorAttachmentCount;
 	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachmentCount);
 
+	GLenum maxColorAttachment = GL_COLOR_ATTACHMENT0 + maxColorAttachmentCount;
+
 	if (m_attachment >= GL_COLOR_ATTACHMENT0 &&
-		m_attachment < GL_COLOR_ATTACHMENT0 + maxColorAttachmentCount)
+		m_attachment < GL_COLOR_ATTACHMENT0 + maxColorAttachment)
 	{
 		return true;
 	}
@@ -65,82 +68,13 @@ bool Framebuffer::Attachment::IsColorAttachment() const
 	return false;
 }
 
-// GL ERROR CHECK
-int CheckGLError(const char* _file, int _line)
+// Temp constructor for managing default framebuffer. Will be deleted soon.
+Framebuffer::Framebuffer(int _width, int _height) :
+	m_width(_width),
+	m_height(_height),
+	m_id(0)
 {
-	int    retCode = 0;
-
-#if !defined(NDEBUG) || defined(_DEBUG) // define 없애지 말것 (릴리즈에서는 그릴때마다 glError체크하면 속도저하생김)
-	GLenum glErr;
-	glErr = glGetError();
-	while (glErr != GL_NO_ERROR)
-	{
-		const char* sError = nullptr;
-
-		switch (glErr)
-		{
-		case GL_NO_ERROR:
-			sError = "GL_NO_ERROR";
-			break;
-		case GL_INVALID_ENUM:
-			sError = "GL_INVALID_ENUM";
-			break;
-		case GL_INVALID_VALUE:
-			sError = "GL_INVALID_VALUE";
-			break;
-		case GL_INVALID_OPERATION:
-			sError = "GL_INVALID_OPERATION";
-			break;
-		case GL_STACK_OVERFLOW:
-			sError = "GL_STACK_OVERFLOW";
-			break;
-		case GL_STACK_UNDERFLOW:
-			sError = "GL_STACK_UNDERFLOW";
-			break;
-		case GL_OUT_OF_MEMORY:
-			sError = "GL_OUT_OF_MEMORY";
-			break;
-		case GL_TABLE_TOO_LARGE:
-			sError = "GL_TABLE_TOO_LARGE";
-			break;
-		}
-
-		if (sError)
-			printf("GL Error #%d (%s) in File %s at line: %d \n", glErr, sError, _file, _line);
-		else
-			printf("GL Error #%d (no message available) in File %s at line: %d \n", glErr, _file, _line);
-
-		if (glErr == GL_STACK_UNDERFLOW || glErr == GL_STACK_OVERFLOW)
-		{
-			GLint matrixMode;
-			GLint stackDepth;
-			GLint activeTexture;
-
-			glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
-
-			switch (matrixMode)
-			{
-			case GL_MODELVIEW:
-				glGetIntegerv(GL_MODELVIEW_STACK_DEPTH, &stackDepth);
-				printf("GL_MODELVIEW, stack(%d) \n", stackDepth);
-				break;
-			case GL_PROJECTION:
-				glGetIntegerv(GL_PROJECTION_STACK_DEPTH, &stackDepth);
-				printf("GL_PROJECTION, stack(%d) \n", stackDepth);
-				break;
-			case GL_TEXTURE:
-				glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTexture);
-				glGetIntegerv(GL_TEXTURE_STACK_DEPTH, &stackDepth);
-				printf("GL_TEXTURE, stack(%d) \n", stackDepth);
-				break;
-			}
-		}
-
-		retCode = 1;
-		glErr = glGetError();
-	}
-#endif
-	return retCode;
+	// Currently, CLO's default framebuffer ID is 0.
 }
 
 Framebuffer::Framebuffer(int _width, int _height, int _sampleCount) :
@@ -160,12 +94,10 @@ Framebuffer::~Framebuffer()
 		m_id = 0;
 	}
 
-	for (auto attachedBuffer : m_attachedBuffers)
+	for (auto managedBuffer : m_managedBuffers)
 	{
-		auto deviceMemory = attachedBuffer.second;
-
-		if (deviceMemory->IsManaged())
-			delete deviceMemory;
+		if (managedBuffer->IsManaged())
+			delete managedBuffer;
 	}
 }
 
@@ -188,6 +120,11 @@ void Framebuffer::Bind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_id);
 
+	glViewport(0, 0, m_width, m_height);
+
+	if (m_attachedBuffers.empty())
+		return;
+
 	std::vector<GLenum> attachments;
 	for (auto attachedBuffer : m_attachedBuffers)
 	{
@@ -198,31 +135,24 @@ void Framebuffer::Bind()
 		}
 	}
 
-	glDrawBuffers(attachments.size(), attachments.data());
-	glViewport(0, 0, m_width, m_height);
+	glDrawBuffers(static_cast<int>(attachments.size()), attachments.data());
 }
 
-void Framebuffer::AddRenderbuffer(Attachment _attachment)
+void Framebuffer::AddRenderbuffer(DeviceMemory::InternalFormat _internalFormat, Attachment _attachment)
 {
-	DeviceMemory::InternalFormat internalFormat = DeviceMemory::InternalFormat::RGBA_Float8;
-	if (_attachment == Attachment::DepthStencil)
-	{
-		internalFormat = DeviceMemory::InternalFormat::Depth_Float24_Stencil_Int8;
-	}
-
-	auto renderbuffer = DeviceMemory::GenRenderbuffer(m_width, m_height, m_sampleCount, internalFormat);
+	auto renderbuffer = DeviceMemory::GenRenderbuffer(m_width, m_height, m_sampleCount, _internalFormat);
 
 	if (renderbuffer == nullptr)
 		return;
 
-	RegisterManagedBuffer(renderbuffer);
+	registerManagedBuffer(renderbuffer);
 
 	AttachRenderbuffer(renderbuffer, _attachment);
 
 	return;
 }
 
-void Framebuffer::AddTexture(Attachment _attachment)
+void Framebuffer::AddTexture(DeviceMemory::InternalFormat _internalFormat, Attachment _attachment)
 {
 	if (_attachment.IsColorAttachment() == false)
 		return;
@@ -234,7 +164,7 @@ void Framebuffer::AddTexture(Attachment _attachment)
 	if (texture == nullptr)
 		return;
 
-	RegisterManagedBuffer(texture);
+	registerManagedBuffer(texture);
 
 	AttachTexture(texture, _attachment);
 
@@ -274,7 +204,7 @@ void Framebuffer::AttachTexture(DeviceMemory* _texture, Attachment _attachment)
 	return;
 }
 
-void Framebuffer::RegisterManagedBuffer(DeviceMemory* _deviceMemory)
+void Framebuffer::registerManagedBuffer(DeviceMemory* _deviceMemory)
 {
 	m_managedBuffers.push_back(_deviceMemory);
 	_deviceMemory->SetManaged(true);
@@ -297,8 +227,10 @@ std::string Framebuffer::getDumpedImageName(Attachment _attachment)
 	}
 	else if (_attachment == Attachment::DepthStencil)
 	{
-		return "DepthStencil";
+		return "DepthStencilAttachment";
 	}
+
+	return "UnknownAttachment";
 }
 
 DeviceMemory* Framebuffer::GenerateBlittedTexture(Attachment _attachment)
@@ -308,17 +240,14 @@ DeviceMemory* Framebuffer::GenerateBlittedTexture(Attachment _attachment)
 	bool supportedFormat = false;
 	if (_attachment.IsColorAttachment())
 	{
-		if (deviceMemory->GetType() == DeviceMemory::MemoryType::Renderbuffer)
-		{
-			supportedFormat = true;
-		}
+		supportedFormat = true;
 	}
 
 	if (supportedFormat == false)
 		return nullptr;
 
 	auto texture = DeviceMemory::GenTexture(m_width, m_height, deviceMemory->GetInternalFormat());
-	
+
 	if (texture == nullptr)
 		return nullptr;
 
@@ -352,8 +281,6 @@ void Framebuffer::DumpAllAttachments(const char* _filePath, bool _formatP6)
 
 		delete texture;
 	}
-
-	CHECK_GL_ERROR;
 }
 
 void Framebuffer::dumpTexture(DeviceMemory* _texture, const char* _fileName, bool _formatP6)
@@ -361,6 +288,8 @@ void Framebuffer::dumpTexture(DeviceMemory* _texture, const char* _fileName, boo
 	auto textureFramebuffer = new Framebuffer(m_width, m_height, m_sampleCount);
 	textureFramebuffer->AttachTexture(_texture, Attachment::Color(0));
 
+	auto internalFormat = _texture->GetInternalFormat();
+	if (internalFormat == DeviceMemory::InternalFormat::RGBA_Float8)
 	{
 		unsigned char* pixels = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 4);
 
@@ -368,7 +297,7 @@ void Framebuffer::dumpTexture(DeviceMemory* _texture, const char* _fileName, boo
 		glReadBuffer(GL_COLOR_ATTACHMENT0);
 		// RGB만 필요해도 왠만하면 일단 RGBA로 읽어오는 것이 안전하다... 이상한 구현체.
 		glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-		CHECK_GL_ERROR;
+
 		if (_formatP6)
 		{
 			unsigned char* flipped = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 3);
@@ -415,6 +344,73 @@ void Framebuffer::dumpTexture(DeviceMemory* _texture, const char* _fileName, boo
 						(unsigned int)pixels[idx],
 						(unsigned int)pixels[idx + 1],
 						(unsigned int)pixels[idx + 2]);
+				}
+			}
+			fclose(fp);
+		}
+
+		free(pixels);
+	}
+	else if (internalFormat == DeviceMemory::InternalFormat::R_Float32)
+	{
+		float* pixels = (float*)malloc(sizeof(float) * m_width * m_height);
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, textureFramebuffer->GetId());
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, m_width, m_height, GL_RED, GL_FLOAT, pixels);
+
+		if (false)
+		{
+			unsigned char* flipped = (unsigned char*)malloc(sizeof(unsigned char) * m_width * m_height * 3);
+			int flippedIdx = 0;
+			for (int i = m_height - 1; i >= 0; i--)
+			{
+				for (int j = 0; j < m_width; j++)
+				{
+					int pixelIdx = (i * m_width + j);
+					flipped[flippedIdx++] = pixels[pixelIdx] * 255.0f;
+					flipped[flippedIdx++] = pixels[pixelIdx] * 255.0f;
+					flipped[flippedIdx++] = pixels[pixelIdx] * 255.0f;
+				}
+			}
+
+			std::ofstream outfile(_fileName, std::ofstream::binary);
+			if (outfile.fail())
+			{
+				free(pixels);
+				free(flipped);
+				return;
+			}
+
+			outfile << "P6\n" << m_width << " " << m_height << "\n" << "255\n";
+			outfile.write(reinterpret_cast<char*>(flipped), m_width * m_height * 3);
+			outfile.close();
+
+			free(flipped);
+		}
+		else
+		{
+			FILE* fp;
+			fp = fopen(_fileName, "wt");
+			fprintf(fp, "P3\n");
+			fprintf(fp, "%d %d\n", m_width, m_height);
+			fprintf(fp, "255\n");
+
+			for (int i = m_height - 1; i >= 0; i--)
+			{
+				for (int j = 0; j < m_width; j++)
+				{
+					int idx = i * m_width + j;
+					/*fprintf(fp, "%u %u %u ",
+						(unsigned int)(pixels[idx] * 255.0f),
+						(unsigned int)(pixels[idx] * 255.0f),
+						(unsigned int)(pixels[idx] * 255.0f));*/
+					fprintf(fp, "%f %f %f ",
+						(pixels[idx] * 255.0f),
+						(pixels[idx] * 255.0f),
+						(pixels[idx] * 255.0f));
 				}
 			}
 			fclose(fp);

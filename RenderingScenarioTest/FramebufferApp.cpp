@@ -4,6 +4,7 @@
 #include "Rectangle.h"
 #include "ShaderManager.h"
 #include "Framebuffer.h"
+#include "GLHelper.h"
 
 FramebufferApp::FramebufferApp() :
 	_rectangle(nullptr)
@@ -12,10 +13,10 @@ FramebufferApp::FramebufferApp() :
 
 	_framebuffer = new Framebuffer(320, 240, 4);
 
-	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(0));
-	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(1));
-	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::Color(2));
-	_framebuffer->AddRenderbuffer(Framebuffer::Attachment::DepthStencil);
+	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::RGBA_Float8, Attachment::Color(0));
+	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::RGBA_Float8, Attachment::Color(1));
+	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::RGBA_Float8, Attachment::Color(2));
+	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::Depth_Float24_Stencil_Int8, Attachment::DepthStencil);
 	
 	if (_framebuffer->IsComplete())
 	{
@@ -57,5 +58,5 @@ void FramebufferApp::Update()
 	_rectangle->Render();
 
 	CHECK_GL_ERROR
-	_framebuffer->DumpBuffer("C:\\Zpac\\DumpedBuffer");
+	_framebuffer->DumpAllAttachments("C:\\Zpac\\DumpedBuffer");
 }

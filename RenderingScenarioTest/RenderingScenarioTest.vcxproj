@@ -36,6 +36,7 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="DeviceMemory.cpp" />
     <ClCompile Include="FramebufferApp.cpp" />
+    <ClCompile Include="GLHelper.cpp" />
     <ClCompile Include="MultipleTexturesApp.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -70,6 +71,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DeviceMemory.h" />
     <ClInclude Include="FramebufferApp.h" />
+    <ClInclude Include="GLHelper.h" />
     <ClInclude Include="MultipleTexturesApp.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -185,6 +187,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_NO_GLU;SDL_MAIN_HANDLED;STB_IMAGE_IMPLEMENTATION</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -205,6 +208,7 @@ xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</C
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_NO_GLU;SDL_MAIN_HANDLED;STB_IMAGE_IMPLEMENTATION</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -227,6 +231,7 @@ xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</C
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_NO_GLU;SDL_MAIN_HANDLED;STB_IMAGE_IMPLEMENTATION</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -251,6 +256,7 @@ xcopy /y $(SolutionDir)\ThirdParty\lib\$(PlatformTarget)\glew32.dll $(OutDir)</C
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_NO_GLU;SDL_MAIN_HANDLED;STB_IMAGE_IMPLEMENTATION</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

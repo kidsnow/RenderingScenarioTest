@@ -98,7 +98,10 @@
       <Filter>Source Files\Framebuffer</Filter>
     </ClCompile>
     <ClCompile Include="DeviceMemory.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="GLHelper.cpp">
+      <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -150,7 +153,12 @@
     <ClInclude Include="FramebufferApp.h">
       <Filter>Source Files\Framebuffer</Filter>
     </ClInclude>
-    <ClInclude Include="DeviceMemory.h" />
+    <ClInclude Include="DeviceMemory.h">
+      <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="GLHelper.h">
+      <Filter>Source Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Page Include="framebuffer.vert">

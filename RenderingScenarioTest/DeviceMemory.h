@@ -19,6 +19,7 @@ public:
 		~InternalFormat();
 
 	public:
+		static const InternalFormat R_Float32;
 		static const InternalFormat RGBA_Float8;
 		static const InternalFormat RGBA_Float32;
 		static const InternalFormat Depth_Float24_Stencil_Int8;
@@ -26,6 +27,7 @@ public:
 	public:
 		explicit operator GLenum() const;
 		bool operator==(const InternalFormat&) const;
+		bool operator!=(const InternalFormat&) const;
 
 	private:
 		GLenum m_enum;
@@ -40,7 +42,9 @@ public:
 	static DeviceMemory* GenTexture(int _width, int _height, InternalFormat _internalFormat);
 
 public:
+	// Mark that this instance's lifecycle is managed by other object from RenderSystem.
 	void SetManaged(bool _managed);
+	// If this returns true, this instance is managed by other object from RenderSystem so don't allocate new device memory or free this memory.
 	bool IsManaged();
 	MemoryType GetType();
 	InternalFormat GetInternalFormat();
