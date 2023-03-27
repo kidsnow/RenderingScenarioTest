@@ -15,7 +15,7 @@ FramebufferApp::FramebufferApp() :
 
 	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::RGBA_Float8, Attachment::Color(0));
 	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::RGBA_Float8, Attachment::Color(1));
-	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::RGBA_Float8, Attachment::Color(2));
+	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::R_Float32, Attachment::Color(2));
 	_framebuffer->AddRenderbuffer(DeviceMemory::InternalFormat::Depth_Float24_Stencil_Int8, Attachment::DepthStencil);
 	
 	if (_framebuffer->IsComplete())
